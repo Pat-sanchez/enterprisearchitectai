@@ -24,7 +24,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your architectural assistant. Describe the building you'd like to create, and I'll help you visualize it. You can say things like 'draw a rectangular room', 'add a door to the north wall', or 'add a window on the east wall'.",
+      content: "Hello! I'm your enterprise architecture assistant. Describe the components of your system, and I'll help you visualize it. You can say things like 'add a database', 'add a service named Payment API', or 'connect the last two elements with REST API'.",
       sender: 'ai',
       timestamp: new Date(),
     },
@@ -99,27 +99,37 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
   const processUserInput = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (input.includes('rectangle') || input.includes('room')) {
-      return "I've added a rectangular room to your diagram.";
-    } else if (input.includes('door')) {
-      return "I've added a door as requested.";
-    } else if (input.includes('window')) {
-      return "I've added a window to the wall.";
-    } else if (input.includes('wall')) {
-      return "I've added a wall to your diagram.";
+    if (input.includes('database')) {
+      return "I've added a database to your diagram.";
+    } else if (input.includes('service')) {
+      return "I've added a service component to your diagram.";
+    } else if (input.includes('api')) {
+      return "I've added an API component to your diagram.";
+    } else if (input.includes('microservice')) {
+      return "I've added a microservice to your diagram.";
+    } else if (input.includes('user')) {
+      return "I've added a user to your diagram.";
+    } else if (input.includes('system')) {
+      return "I've added a system to your diagram.";
+    } else if (input.includes('container')) {
+      return "I've added a container to your diagram.";
+    } else if (input.includes('component')) {
+      return "I've added a component to your diagram.";
+    } else if (input.includes('connect')) {
+      return "I've connected the last two components in your diagram.";
     } else if (input.includes('delete') || input.includes('remove')) {
-      return "I've removed that element from your diagram.";
+      return "I've removed the last element from your diagram.";
     } else if (input.includes('help')) {
-      return "You can ask me to draw rooms, add walls, doors, and windows. Try saying things like 'add a rectangular room', 'place a door on the north wall', or 'add a window to the east wall'.";
+      return "You can ask me to add components like databases, services, APIs, microservices, users, systems, containers, and components. You can also connect components by saying 'connect the last two components' or similar phrases. To name a component, say something like 'add a service named Payment Processor'.";
     } else {
-      return "I'm not sure how to process that request. Try asking me to draw a room, add a wall, door, or window.";
+      return "I'm not sure how to process that request. Try asking me to add a database, service, API, microservice, user, system, container, or component. You can also connect components or remove the last element.";
     }
   };
 
   return (
     <div className="flex flex-col h-full border rounded-lg overflow-hidden bg-white dark:bg-gray-950">
       <div className="p-3 border-b bg-muted dark:bg-gray-900">
-        <h2 className="font-medium">Architectural Assistant</h2>
+        <h2 className="font-medium">Enterprise Architecture Assistant</h2>
       </div>
       
       <ScrollArea className="flex-1 p-4">
@@ -147,7 +157,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Describe what you want to build..."
+            placeholder="Describe your enterprise architecture components..."
             className="min-h-[60px] flex-1"
           />
           <Button

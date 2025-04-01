@@ -1,6 +1,6 @@
 
-// Utility types for architectural elements
-export type ElementType = 'wall' | 'door' | 'window' | 'room';
+// Utility types for enterprise architecture elements
+export type ElementType = 'service' | 'database' | 'api' | 'microservice' | 'user' | 'system' | 'container' | 'component' | 'connection';
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
 export interface Point {
@@ -19,42 +19,140 @@ export interface Element {
   position: Point;
   size: Size;
   rotation?: number;
+  label?: string;
   properties?: Record<string, any>;
 }
 
 // Helper functions
-export const createRoom = (
+export const createService = (
   position: Point,
-  size: Size = { width: 200, height: 150 }
+  label: string = "Service",
+  size: Size = { width: 120, height: 80 }
 ): Element => {
   return {
-    id: `room-${Date.now()}`,
-    type: 'room',
+    id: `service-${Date.now()}`,
+    type: 'service',
     position,
     size,
+    label,
   };
 };
 
-export const createWall = (
-  startPoint: Point,
-  endPoint: Point
+export const createDatabase = (
+  position: Point,
+  label: string = "Database",
+  size: Size = { width: 100, height: 120 }
 ): Element => {
-  // Calculate position (top-left corner) and size
-  const position = {
-    x: Math.min(startPoint.x, endPoint.x),
-    y: Math.min(startPoint.y, endPoint.y),
-  };
-  
-  const size = {
-    width: Math.abs(endPoint.x - startPoint.x),
-    height: Math.abs(endPoint.y - startPoint.y),
-  };
-  
   return {
-    id: `wall-${Date.now()}`,
-    type: 'wall',
+    id: `db-${Date.now()}`,
+    type: 'database',
     position,
     size,
+    label,
+  };
+};
+
+export const createApi = (
+  position: Point,
+  label: string = "API",
+  size: Size = { width: 120, height: 60 }
+): Element => {
+  return {
+    id: `api-${Date.now()}`,
+    type: 'api',
+    position,
+    size,
+    label,
+  };
+};
+
+export const createMicroservice = (
+  position: Point,
+  label: string = "Microservice",
+  size: Size = { width: 120, height: 80 }
+): Element => {
+  return {
+    id: `ms-${Date.now()}`,
+    type: 'microservice',
+    position,
+    size,
+    label,
+  };
+};
+
+export const createUser = (
+  position: Point,
+  label: string = "User",
+  size: Size = { width: 80, height: 100 }
+): Element => {
+  return {
+    id: `user-${Date.now()}`,
+    type: 'user',
+    position,
+    size,
+    label,
+  };
+};
+
+export const createSystem = (
+  position: Point,
+  label: string = "System",
+  size: Size = { width: 160, height: 120 }
+): Element => {
+  return {
+    id: `system-${Date.now()}`,
+    type: 'system',
+    position,
+    size,
+    label,
+  };
+};
+
+export const createContainer = (
+  position: Point,
+  label: string = "Container",
+  size: Size = { width: 160, height: 100 }
+): Element => {
+  return {
+    id: `container-${Date.now()}`,
+    type: 'container',
+    position,
+    size,
+    label,
+  };
+};
+
+export const createComponent = (
+  position: Point,
+  label: string = "Component",
+  size: Size = { width: 120, height: 70 }
+): Element => {
+  return {
+    id: `component-${Date.now()}`,
+    type: 'component',
+    position,
+    size,
+    label,
+  };
+};
+
+export const createConnection = (
+  startPoint: Point,
+  endPoint: Point,
+  label: string = ""
+): Element => {
+  return {
+    id: `conn-${Date.now()}`,
+    type: 'connection',
+    position: {
+      x: Math.min(startPoint.x, endPoint.x),
+      y: Math.min(startPoint.y, endPoint.y),
+    },
+    size: {
+      width: Math.abs(endPoint.x - startPoint.x),
+      height: Math.abs(endPoint.y - startPoint.y),
+    },
+    label,
     properties: {
       startPoint,
       endPoint,
@@ -62,119 +160,71 @@ export const createWall = (
   };
 };
 
-export const createDoor = (
-  position: Point,
-  size: Size = { width: 40, height: 5 }
-): Element => {
-  return {
-    id: `door-${Date.now()}`,
-    type: 'door',
-    position,
-    size,
-    rotation: 0,
-  };
-};
-
-export const createWindow = (
-  position: Point,
-  size: Size = { width: 30, height: 5 }
-): Element => {
-  return {
-    id: `window-${Date.now()}`,
-    type: 'window',
-    position,
-    size,
-    rotation: 0,
-  };
-};
-
-export const rotateElement = (element: Element, degrees: number): Element => {
-  return {
-    ...element,
-    rotation: (element.rotation || 0) + degrees,
-  };
-};
-
 export const processCommand = (command: string, elements: Element[]): Element[] => {
   const cmd = command.toLowerCase();
   let newElements = [...elements];
   
-  if (cmd.includes('room') || cmd.includes('rectangle')) {
-    const center = { x: 400, y: 300 };
-    newElements.push(createRoom(center));
-  } else if (cmd.includes('wall')) {
-    // Simple wall processing logic
-    if (elements.length > 0 && elements[0].type === 'room') {
-      const room = elements[0];
-      const { position, size } = room;
+  if (cmd.includes('service')) {
+    const label = extractLabel(command, 'service');
+    newElements.push(createService({ x: 400, y: 150 }, label));
+  } else if (cmd.includes('database')) {
+    const label = extractLabel(command, 'database');
+    newElements.push(createDatabase({ x: 400, y: 300 }, label));
+  } else if (cmd.includes('api')) {
+    const label = extractLabel(command, 'api');
+    newElements.push(createApi({ x: 400, y: 220 }, label));
+  } else if (cmd.includes('microservice')) {
+    const label = extractLabel(command, 'microservice');
+    newElements.push(createMicroservice({ x: 400, y: 380 }, label));
+  } else if (cmd.includes('user')) {
+    const label = extractLabel(command, 'user');
+    newElements.push(createUser({ x: 200, y: 150 }, label));
+  } else if (cmd.includes('system')) {
+    const label = extractLabel(command, 'system');
+    newElements.push(createSystem({ x: 400, y: 200 }, label));
+  } else if (cmd.includes('container')) {
+    const label = extractLabel(command, 'container');
+    newElements.push(createContainer({ x: 400, y: 300 }, label));
+  } else if (cmd.includes('component')) {
+    const label = extractLabel(command, 'component');
+    newElements.push(createComponent({ x: 400, y: 400 }, label));
+  } else if (cmd.includes('connect')) {
+    if (elements.length >= 2) {
+      const lastTwo = elements.slice(-2);
+      const e1 = lastTwo[0];
+      const e2 = lastTwo[1];
       
-      // Add walls around the room
-      const walls = [
-        // Top wall
-        createWall(
-          { x: position.x, y: position.y },
-          { x: position.x + size.width, y: position.y }
-        ),
-        // Right wall
-        createWall(
-          { x: position.x + size.width, y: position.y },
-          { x: position.x + size.width, y: position.y + size.height }
-        ),
-        // Bottom wall
-        createWall(
-          { x: position.x, y: position.y + size.height },
-          { x: position.x + size.width, y: position.y + size.height }
-        ),
-        // Left wall
-        createWall(
-          { x: position.x, y: position.y },
-          { x: position.x, y: position.y + size.height }
-        ),
-      ];
+      const startPoint = {
+        x: e1.position.x + e1.size.width / 2,
+        y: e1.position.y + e1.size.height / 2
+      };
       
-      newElements = [...newElements, ...walls];
-    }
-  } else if (cmd.includes('door')) {
-    if (elements.length > 0) {
-      // Find a wall to add the door to
-      const walls = elements.filter(el => el.type === 'wall');
-      if (walls.length > 0) {
-        const wall = walls[0];
-        const { position, size } = wall;
-        
-        // Place door in the middle of the wall
-        const doorPosition = {
-          x: position.x + size.width / 2 - 20,
-          y: position.y - 2.5,
-        };
-        
-        newElements.push(createDoor(doorPosition));
-      }
-    }
-  } else if (cmd.includes('window')) {
-    if (elements.length > 0) {
-      // Find a wall to add the window to
-      const walls = elements.filter(el => el.type === 'wall');
-      if (walls.length > 0) {
-        const wall = walls[1]; // Use the second wall for variety
-        const { position, size } = wall;
-        
-        // Place window in the middle of the wall
-        const windowPosition = {
-          x: position.x - 2.5,
-          y: position.y + size.height / 2 - 15,
-        };
-        
-        const window = createWindow(windowPosition);
-        newElements.push(rotateElement(window, 90));
-      }
+      const endPoint = {
+        x: e2.position.x + e2.size.width / 2,
+        y: e2.position.y + e2.size.height / 2
+      };
+      
+      const label = extractLabel(command, 'connect');
+      newElements.push(createConnection(startPoint, endPoint, label));
     }
   } else if (cmd.includes('delete') || cmd.includes('remove')) {
-    // Remove the last element added
     if (newElements.length > 0) {
       newElements.pop();
     }
   }
   
   return newElements;
+};
+
+// Helper to extract labels from commands
+const extractLabel = (command: string, entityType: string): string => {
+  const regex = new RegExp(`${entityType}\\s+(?:called|named|labeled)?\\s*["']?([\\w\\s-]+)["']?`, 'i');
+  const match = command.match(regex);
+  
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  // If no specific name found, capitalize the entity type as default label
+  return entityType.charAt(0).toUpperCase() + entityType.slice(1);
 };

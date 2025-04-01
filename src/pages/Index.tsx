@@ -37,7 +37,7 @@ const Index = () => {
       
       <footer className="border-t py-4 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>ArchitectAI - Create architectural diagrams through conversation</p>
+          <p>EnterpriseArchitect AI - Create enterprise architecture diagrams through conversation</p>
         </div>
       </footer>
     </div>
