@@ -1,12 +1,45 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import Header from '@/components/Header';
+import ChatInterface from '@/components/ChatInterface';
+import DiagramCanvas from '@/components/DiagramCanvas';
 
 const Index = () => {
+  const [currentCommand, setCurrentCommand] = useState<string | undefined>();
+
+  const handleUserMessage = (message: string) => {
+    console.log('User message:', message);
+    setCurrentCommand(message);
+  };
+
+  const handleAiResponse = (message: any) => {
+    console.log('AI response:', message);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="flex flex-col h-screen bg-secondary">
+      <Header />
+      
+      <div className="flex-1 container mx-auto px-4 py-6 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+          <div className="h-full flex flex-col">
+            <ChatInterface 
+              onMessage={handleUserMessage}
+              onAiResponse={handleAiResponse}
+            />
+          </div>
+          
+          <div className="h-full flex flex-col">
+            <DiagramCanvas command={currentCommand} />
+          </div>
+        </div>
       </div>
+      
+      <footer className="border-t py-4 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>ArchitectAI - Create architectural diagrams through conversation</p>
+        </div>
+      </footer>
     </div>
   );
 };
