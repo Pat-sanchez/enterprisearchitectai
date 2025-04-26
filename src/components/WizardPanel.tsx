@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-interface WizardPanelProps {
-  onCommandGenerated: (command: string) => void;
-}
-
 interface Question {
   id: string;
   title: string;
@@ -22,7 +17,12 @@ interface Question {
   options?: { value: string; label: string }[];
 }
 
-const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
+interface WizardPanelProps {
+  onCommandGenerated: (command: string) => void;
+  hidden?: boolean;
+}
+
+const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [selectedComponents, setSelectedComponents] = useState<string[]>([]);
@@ -340,6 +340,10 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
         return null;
     }
   };
+
+  if (hidden) {
+    return null;
+  }
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-950">

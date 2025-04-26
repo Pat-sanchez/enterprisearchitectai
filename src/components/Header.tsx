@@ -1,15 +1,29 @@
 
 import React from 'react';
-import { Code, Download, Settings, HelpCircle, FileImage, Upload } from 'lucide-react';
+import { Code, Save, Plus, RotateCcw, ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   activeTab: 'wizard' | 'import';
   onTabChange: (tab: string) => void;
+  onNewDiagram?: () => void;
+  onSaveDiagram?: () => void;
+  onResetDiagram?: () => void;
+  onBackToWizard?: () => void;
+  showWizardControls?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  activeTab, 
+  onTabChange,
+  onNewDiagram,
+  onSaveDiagram,
+  onResetDiagram,
+  onBackToWizard,
+  showWizardControls = false
+}) => {
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
@@ -38,14 +52,66 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
         </Tabs>
         
         <div className="flex items-center space-x-1">
-          <Button variant="ghost" size="icon" className="hover:bg-primary/10" title="Export Diagram">
-            <Download className="h-5 w-5" />
+          {showWizardControls && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hover:bg-primary/10" 
+              onClick={() => {
+                if (onBackToWizard) {
+                  onBackToWizard();
+                  toast.info('Returning to wizard questions');
+                }
+              }}
+              title="Back to Wizard Questions"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-primary/10" 
+            onClick={() => {
+              if (onNewDiagram) {
+                onNewDiagram();
+                toast.success('Created new diagram');
+              }
+            }}
+            title="New Diagram"
+          >
+            <Plus className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="hover:bg-primary/10" title="Settings">
-            <Settings className="h-5 w-5" />
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-primary/10"
+            onClick={() => {
+              if (onSaveDiagram) {
+                onSaveDiagram();
+                toast.success('Diagram saved');
+              }
+            }}
+            title="Save Diagram"
+          >
+            <Save className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="hover:bg-primary/10" title="Help">
-            <HelpCircle className="h-5 w-5" />
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-primary/10"
+            onClick={() => {
+              if (onResetDiagram) {
+                onResetDiagram();
+                toast.info('Diagram reset');
+              }
+            }}
+            title="Reset Diagram"
+          >
+            <RotateCcw className="h-5 w-5" />
           </Button>
         </div>
       </div>
