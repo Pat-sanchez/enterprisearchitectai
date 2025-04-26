@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Glasses, Save, Plus, RotateCcw, ArrowLeft, Upload, Code } from 'lucide-react';
+import { Glasses, Save, Plus, RotateCcw, ArrowLeft, Upload, Code, Nose, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -34,11 +34,21 @@ const Header: React.FC<HeaderProps> = ({
     <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         <div className="flex items-center space-x-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 shadow-sm">
-            <Glasses 
-              className="h-6 w-6 text-primary transform transition-transform duration-300 hover:rotate-12 hover:scale-110" 
-              strokeWidth={1.5}
-            />
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-center relative">
+              <Glasses 
+                className="h-6 w-6 text-primary transform transition-transform duration-300 hover:rotate-12 hover:scale-110 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
+                strokeWidth={1.5}
+              />
+              <Nose 
+                className="h-3 w-3 text-primary/50 absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2" 
+                strokeWidth={1.5}
+              />
+              <Smile 
+                className="h-4 w-4 text-primary/50 absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2" 
+                strokeWidth={1.5}
+              />
+            </div>
           </div>
           <h1 className="font-semibold text-lg tracking-tight flex items-center">
             <span>Archi</span>
@@ -152,3 +162,4 @@ const Header: React.FC<HeaderProps> = ({
 };
 
 export default Header;
+
