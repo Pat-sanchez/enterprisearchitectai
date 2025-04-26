@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Glasses, 
@@ -47,10 +46,6 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center justify-center relative">
               <Glasses 
                 className="h-6 w-6 text-primary transform transition-transform duration-300 hover:rotate-12 hover:scale-110 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
-                strokeWidth={1.5}
-              />
-              <Nose 
-                className="h-3 w-3 text-primary/50 absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2" 
                 strokeWidth={1.5}
               />
               <Smile 
@@ -171,4 +166,3 @@ const Header: React.FC<HeaderProps> = ({
 };
 
 export default Header;
-
