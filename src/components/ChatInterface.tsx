@@ -52,7 +52,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
 
     setMessages((prev) => [...prev, userMessage]);
     console.log('Sending user message to handler:', input);
-    onMessage(input);
+    onMessage(input); // Send message to parent component
     setInput('');
 
     // Simulate AI response
@@ -66,7 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
       };
       setMessages((prev) => [...prev, aiMessage]);
       onAiResponse(aiMessage);
-    }, 1000);
+    }, 500); // Reduced timeout for faster response
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -96,7 +96,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
     }
   };
 
-  // Simple processing logic - in a real app this would be more sophisticated
+  // Process user input
   const processUserInput = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
@@ -117,7 +117,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
     } else if (input.includes('component')) {
       return "I've added a component to your diagram.";
     } else if (input.includes('connect')) {
-      return "I've connected the last two components in your diagram.";
+      return "I've connected the elements in your diagram.";
     } else if (input.includes('delete') || input.includes('remove')) {
       return "I've removed the last element from your diagram.";
     } else if (input.includes('help')) {

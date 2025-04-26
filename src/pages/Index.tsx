@@ -9,13 +9,16 @@ const Index = () => {
 
   const handleUserMessage = (message: string) => {
     console.log('User message received:', message);
-    setCurrentCommand(message);
+    // Clear and then set the command to ensure the effect triggers even if the same command is sent twice
+    setCurrentCommand(undefined);
+    setTimeout(() => {
+      setCurrentCommand(message);
+    }, 10);
   };
 
   const handleAiResponse = (message: any) => {
     console.log('AI response:', message);
     // No need to set the command again from AI response
-    // This prevents duplicate processing
   };
 
   return (

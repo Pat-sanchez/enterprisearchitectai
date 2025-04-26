@@ -32,17 +32,19 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
         const newElements = processCommand(command, elements);
         console.log('Processed elements:', newElements);
         
-        // Check if elements were actually added/modified
         if (newElements.length !== elements.length) {
-          toast.success(`Added new ${command.toLowerCase().includes('database') ? 'database' : 
-                        command.toLowerCase().includes('service') ? 'service' : 
-                        command.toLowerCase().includes('api') ? 'API' : 
-                        command.toLowerCase().includes('user') ? 'user' : 
-                        command.toLowerCase().includes('microservice') ? 'microservice' : 
-                        command.toLowerCase().includes('system') ? 'system' : 
-                        command.toLowerCase().includes('container') ? 'container' : 
-                        command.toLowerCase().includes('component') ? 'component' : 
-                        'element'} to diagram`);
+          const componentType = 
+            command.toLowerCase().includes('database') ? 'database' : 
+            command.toLowerCase().includes('service') ? 'service' : 
+            command.toLowerCase().includes('api') ? 'API' : 
+            command.toLowerCase().includes('user') ? 'user' : 
+            command.toLowerCase().includes('microservice') ? 'microservice' : 
+            command.toLowerCase().includes('system') ? 'system' : 
+            command.toLowerCase().includes('container') ? 'container' : 
+            command.toLowerCase().includes('component') ? 'component' : 
+            'element';
+          
+          toast.success(`Added new ${componentType} to diagram`);
         } else if (command.toLowerCase().includes('connect')) {
           toast.success('Connected elements in diagram');
         } else if (command.toLowerCase().includes('delete') || command.toLowerCase().includes('remove')) {
@@ -75,6 +77,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
 
   const handleDragStart = (id: string, e: React.MouseEvent) => {
     console.log('Starting drag for element:', id);
+    e.stopPropagation();
     setDraggedElement(id);
   };
 
@@ -86,7 +89,6 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
     point.x = e.clientX;
     point.y = e.clientY;
     
-    // Check if getScreenCTM returns null
     const screenCTM = svg.getScreenCTM();
     if (!screenCTM) {
       console.error('getScreenCTM returned null');
@@ -97,6 +99,9 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
 
     setElements(prev => prev.map(elem => {
       if (elem.id === draggedElement) {
+        // If it's a connection, don't allow dragging
+        if (elem.type === 'connection') return elem;
+        
         return {
           ...elem,
           position: {
@@ -142,25 +147,34 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
       <div className="p-3 border-b bg-muted dark:bg-gray-900 flex justify-between items-center">
         <h2 className="font-medium">Enterprise Architecture Diagram</h2>
         <div className="flex items-center space-x-1">
-          <Button variant="outline" size="icon" onClick={handleZoomIn} title="Zoom In">
+          <Button variant="outline" size="icon" onClick={() => setScale(prev => Math.min(prev + 0.1, 2))} title="Zoom In">
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={handleZoomOut} title="Zoom Out">
+          <Button variant="outline" size="icon" onClick={() => setScale(prev => Math.max(prev - 0.1, 0.5))} title="Zoom Out">
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={handleReset} title="Reset">
+          <Button variant="outline" size="icon" onClick={() => {
+            setElements([]);
+            setScale(1);
+            toast.info('Diagram reset');
+          }} title="Reset">
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto canvas-container">
+      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
         <svg 
           ref={svgRef}
           width="100%" 
           height="100%" 
           viewBox="0 0 800 600"
-          style={{ transform: `scale(${scale})`, transformOrigin: 'center' }}
+          style={{ 
+            transform: `scale(${scale})`, 
+            transformOrigin: 'center',
+            minHeight: '600px',
+            background: 'white',
+          }}
           className="min-h-[600px]"
           onMouseMove={handleDragMove}
           onMouseUp={handleDragEnd}
@@ -220,6 +234,12 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
                     <>
                       <ContextMenuItem onClick={() => setEditingLabel(element.id)}>
                         Rename
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => {
+                        setElements(prev => prev.filter(e => e.id !== element.id));
+                        toast.info('Element removed');
+                      }}>
+                        Delete
                       </ContextMenuItem>
                     </>
                   )}
