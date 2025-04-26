@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Code } from 'lucide-react';
+import { Code, Download, Settings, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
@@ -36,3 +36,4 @@ const Header = () => {
 };
 
 export default Header;
+
