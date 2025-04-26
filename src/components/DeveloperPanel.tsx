@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Code, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import UMLHelp from './UMLHelp';
 
 interface DeveloperPanelProps {
   onCommandGenerated: (command: string) => void;
@@ -46,27 +46,23 @@ const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ onCommandGenerated }) =
   return (
     <div className="border-t bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
       <div className="container mx-auto">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center justify-between w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-4 py-2">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          >
             <Code size={16} />
             Developer Mode
-          </div>
-          {isExpanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-        </button>
+            {isExpanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </button>
+          <UMLHelp />
+        </div>
         
         {isExpanded && (
           <div className="p-4 space-y-4">
             <div className="space-y-2">
               <label className="text-sm text-muted-foreground">
-                Write your diagram code (example):
-                <pre className="mt-1 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                  service: Auth Service{'\n'}
-                  database: Users DB{'\n'}
-                  connect: Authenticates{'\n'}
-                </pre>
+                Write your diagram code:
               </label>
               <Textarea
                 value={code}

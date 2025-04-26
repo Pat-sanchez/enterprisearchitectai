@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Element, processCommand } from '@/lib/diagramUtils';
 import ArchitecturalElement from './ArchitecturalElement';
@@ -24,7 +23,6 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Process commands when they arrive
   useEffect(() => {
     if (command) {
       console.log('DiagramCanvas received command:', command);
@@ -99,7 +97,6 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
 
     setElements(prev => prev.map(elem => {
       if (elem.id === draggedElement) {
-        // If it's a connection, don't allow dragging
         if (elem.type === 'connection') return elem;
         
         return {
@@ -145,7 +142,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
   return (
     <div className="flex flex-col h-full border rounded-lg overflow-hidden bg-white dark:bg-gray-950">
       <div className="p-3 border-b bg-muted dark:bg-gray-900 flex justify-between items-center">
-        <h2 className="font-medium">Enterprise Architecture Diagram</h2>
+        <h2 className="font-medium">Archi Whiteboard</h2>
         <div className="flex items-center space-x-1">
           <Button variant="outline" size="icon" onClick={() => setScale(prev => Math.min(prev + 0.1, 2))} title="Zoom In">
             <ZoomIn className="h-4 w-4" />
