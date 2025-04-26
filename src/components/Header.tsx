@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code, Save, Plus, RotateCcw, ArrowLeft, Upload } from 'lucide-react';
+import { Glasses, Save, Plus, RotateCcw, ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         <div className="flex items-center space-x-3">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 shadow-sm">
-            <Code 
+            <Glasses 
               className="h-6 w-6 text-primary transform transition-transform duration-300 hover:rotate-12 hover:scale-110" 
               strokeWidth={1.5}
             />
