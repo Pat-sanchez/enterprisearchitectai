@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ interface Question {
 const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [selectedComponents, setSelectedComponents] = useState<string[]>([]);
   const [customComponents, setCustomComponents] = useState<string>('');
 
   const questions: Question[] = [
@@ -136,32 +138,33 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
 
   const handleAnswer = (value: string) => {
     if (currentQuestion.type === 'hybrid-components') {
-      if (value === customComponents) {
-        setCustomComponents('');
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: '',
-        });
-      } else {
-        setCustomComponents('');
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: value,
-        });
-      }
-    } else {
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: value,
-      });
+      return;
     }
+    setAnswers({
+      ...answers,
+      [currentQuestion.id]: value,
+    });
+  };
+
+  const handleComponentToggle = (value: string, checked: boolean) => {
+    let newComponents;
+    if (checked) {
+      newComponents = [...selectedComponents, value];
+    } else {
+      newComponents = selectedComponents.filter(c => c !== value);
+    }
+    setSelectedComponents(newComponents);
+    setAnswers({
+      ...answers,
+      [currentQuestion.id]: [...newComponents, customComponents].filter(Boolean).join(', '),
+    });
   };
 
   const handleCustomComponents = (value: string) => {
     setCustomComponents(value);
     setAnswers({
       ...answers,
-      [currentQuestion.id]: value,
+      [currentQuestion.id]: [...selectedComponents, value].filter(Boolean).join(', '),
     });
   };
 
@@ -244,20 +247,20 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
       case 'hybrid-components':
         return (
           <div className="space-y-4 mt-4">
-            <RadioGroup 
-              value={answers[currentQuestion.id] || ''}
-              onValueChange={handleAnswer}
-              className="space-y-3"
-            >
+            <div className="space-y-4">
               {currentQuestion.options?.map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.value} id={option.value} />
+                  <Checkbox
+                    id={option.value}
+                    checked={selectedComponents.includes(option.value)}
+                    onCheckedChange={(checked) => handleComponentToggle(option.value, checked as boolean)}
+                  />
                   <Label htmlFor={option.value} className="cursor-pointer">
                     {option.label}
                   </Label>
                 </div>
               ))}
-            </RadioGroup>
+            </div>
             <div className="pt-4 border-t">
               <Label htmlFor="custom-components">Or add custom components (comma-separated)</Label>
               <Textarea 
