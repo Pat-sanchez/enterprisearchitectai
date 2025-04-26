@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import DiagramCanvas from '@/components/DiagramCanvas';
 import WizardPanel from '@/components/WizardPanel';
 import ImportPanel from '@/components/ImportPanel';
+import DeveloperPanel from '@/components/DeveloperPanel';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const Index = () => {
@@ -46,6 +47,8 @@ const Index = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+      
+      <DeveloperPanel onCommandGenerated={handleUserMessage} />
       
       <footer className="border-t py-3 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
