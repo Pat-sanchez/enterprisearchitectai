@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import DiagramCanvas from '@/components/DiagramCanvas';
 import WizardPanel from '@/components/WizardPanel';
 import ImportPanel from '@/components/ImportPanel';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const Index = () => {
   const [currentCommand, setCurrentCommand] = useState<string | undefined>();
@@ -11,7 +12,6 @@ const Index = () => {
 
   const handleUserMessage = (message: string) => {
     console.log('User message received:', message);
-    // Clear and then set the command to ensure the effect triggers even if the same command is sent twice
     setCurrentCommand(undefined);
     setTimeout(() => {
       setCurrentCommand(message);
@@ -26,23 +26,25 @@ const Index = () => {
       />
       
       <div className="flex-1 container mx-auto p-6 overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-          <div className="h-full flex flex-col">
-            <div className="rounded-xl overflow-hidden shadow-lg h-full border border-border/50">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl border border-border/50">
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className="h-full">
               {activeTab === 'wizard' ? (
                 <WizardPanel onCommandGenerated={handleUserMessage} />
               ) : (
                 <ImportPanel onCommandGenerated={handleUserMessage} />
               )}
             </div>
-          </div>
+          </ResizablePanel>
           
-          <div className="h-full flex flex-col">
-            <div className="rounded-xl overflow-hidden shadow-lg h-full border border-border/50">
+          <ResizableHandle withHandle />
+          
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className="h-full">
               <DiagramCanvas command={currentCommand} />
             </div>
-          </div>
-        </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
       
       <footer className="border-t py-3 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
