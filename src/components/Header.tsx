@@ -48,10 +48,6 @@ const Header: React.FC<HeaderProps> = ({
                 className="h-6 w-6 text-primary transform transition-transform duration-300 hover:rotate-12 hover:scale-110 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
                 strokeWidth={1.5}
               />
-              <Smile 
-                className="h-4 w-4 text-primary/50 absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2" 
-                strokeWidth={1.5}
-              />
             </div>
           </div>
           <h1 className="font-semibold text-lg tracking-tight flex items-center">
