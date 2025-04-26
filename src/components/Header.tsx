@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Glasses, Save, Plus, RotateCcw, ArrowLeft, Upload } from 'lucide-react';
+import { Glasses, Save, Plus, RotateCcw, ArrowLeft, Upload, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
