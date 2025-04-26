@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Glasses, 
@@ -7,7 +8,15 @@ import {
   ArrowLeft, 
   Upload, 
   Code, 
-  Smile 
+  Download,
+  FileText,
+  FileCode,
+  Moon,
+  Sun,
+  History,
+  Keyboard,
+  HelpCircle,
+  Templates
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +27,13 @@ import {
   TooltipProvider, 
   TooltipTrigger 
 } from '@/components/ui/tooltip';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTheme } from '@/hooks/useTheme';
 
 interface HeaderProps {
   activeTab: 'wizard' | 'import';
@@ -27,6 +43,11 @@ interface HeaderProps {
   onResetDiagram?: () => void;
   onBackToWizard?: () => void;
   showWizardControls?: boolean;
+  onExportDiagram?: (format: 'png' | 'svg' | 'json') => void;
+  onShowTemplates?: () => void;
+  onShowHistory?: () => void;
+  onShowKeyboardShortcuts?: () => void;
+  onShowHelp?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -36,8 +57,15 @@ const Header: React.FC<HeaderProps> = ({
   onSaveDiagram,
   onResetDiagram,
   onBackToWizard,
-  showWizardControls = false
+  showWizardControls = false,
+  onExportDiagram,
+  onShowTemplates,
+  onShowHistory,
+  onShowKeyboardShortcuts,
+  onShowHelp
 }) => {
+  const { theme, setTheme } = useTheme();
+  
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
@@ -134,6 +162,81 @@ const Header: React.FC<HeaderProps> = ({
               </TooltipContent>
             </Tooltip>
             
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-primary/10"
+                    >
+                      <Download className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Export Diagram</p>
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onExportDiagram && onExportDiagram('png')}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export as PNG
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onExportDiagram && onExportDiagram('svg')}>
+                  <FileCode className="mr-2 h-4 w-4" />
+                  Export as SVG
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onExportDiagram && onExportDiagram('json')}>
+                  <FileCode className="mr-2 h-4 w-4" />
+                  Export as JSON
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    if (onShowTemplates) {
+                      onShowTemplates();
+                      toast.info('Showing templates');
+                    }
+                  }}
+                >
+                  <Templates className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Browse Templates</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    if (onShowHistory) {
+                      onShowHistory();
+                      toast.info('Showing version history');
+                    }
+                  }}
+                >
+                  <History className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Version History</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -152,6 +255,69 @@ const Header: React.FC<HeaderProps> = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p>Reset Diagram to Initial State</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    if (onShowKeyboardShortcuts) {
+                      onShowKeyboardShortcuts();
+                    } else {
+                      toast.info('Keyboard shortcuts coming soon');
+                    }
+                  }}
+                >
+                  <Keyboard className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Keyboard Shortcuts</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    if (onShowHelp) {
+                      onShowHelp();
+                    } else {
+                      toast.info('Help documentation coming soon');
+                    }
+                  }}
+                >
+                  <HelpCircle className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Help & Documentation</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    setTheme(theme === 'dark' ? 'light' : 'dark');
+                    toast.info(`Switched to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+                  }}
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Toggle Dark Mode</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

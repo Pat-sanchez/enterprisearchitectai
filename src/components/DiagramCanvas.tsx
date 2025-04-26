@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Element, processCommand } from '@/lib/diagramUtils';
 import ArchitecturalElement from './ArchitecturalElement';
 import { Button } from '@/components/ui/button';
@@ -14,14 +15,19 @@ import { toast } from "sonner";
 
 interface DiagramCanvasProps {
   command?: string;
+  svgRef?: React.RefObject<SVGSVGElement>;
+  onElementsChange?: (elements: Element[]) => void;
 }
 
-const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
+const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElementsChange }) => {
   const [elements, setElements] = useState<Element[]>([]);
   const [scale, setScale] = useState(1);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
+  const localSvgRef = React.useRef<SVGSVGElement>(null);
+  
+  // Use provided ref or local ref
+  const effectiveSvgRef = svgRef || localSvgRef;
 
   useEffect(() => {
     if (command) {
@@ -47,9 +53,16 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
           toast.success('Connected elements in diagram');
         } else if (command.toLowerCase().includes('delete') || command.toLowerCase().includes('remove')) {
           toast.info('Removed element from diagram');
+        } else if (command.toLowerCase() === 'reset') {
+          toast.info('Diagram reset');
         }
         
         setElements(newElements);
+        
+        // Notify parent of element changes
+        if (onElementsChange) {
+          onElementsChange(newElements);
+        }
       } catch (error) {
         console.error('Error processing diagram command:', error);
         toast.error('Failed to update diagram');
@@ -71,6 +84,11 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
     setElements([]);
     setScale(1);
     toast.info('Diagram reset');
+    
+    // Notify parent of element changes
+    if (onElementsChange) {
+      onElementsChange([]);
+    }
   };
 
   const handleDragStart = (id: string, e: React.MouseEvent) => {
@@ -80,9 +98,9 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
   };
 
   const handleDragMove = (e: React.MouseEvent) => {
-    if (!draggedElement || !svgRef.current) return;
+    if (!draggedElement || !effectiveSvgRef.current) return;
 
-    const svg = svgRef.current;
+    const svg = effectiveSvgRef.current;
     const point = svg.createSVGPoint();
     point.x = e.clientX;
     point.y = e.clientY;
@@ -95,7 +113,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
     
     const svgPoint = point.matrixTransform(screenCTM.inverse());
 
-    setElements(prev => prev.map(elem => {
+    const newElements = elements.map(elem => {
       if (elem.id === draggedElement) {
         if (elem.type === 'connection') return elem;
         
@@ -108,7 +126,14 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
         };
       }
       return elem;
-    }));
+    });
+    
+    setElements(newElements);
+    
+    // Notify parent of element changes
+    if (onElementsChange) {
+      onElementsChange(newElements);
+    }
   };
 
   const handleDragEnd = () => {
@@ -126,7 +151,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
       return;
     }
     
-    setElements(prev => prev.map(elem => {
+    const newElements = elements.map(elem => {
       if (elem.id === id) {
         toast.success(`Renamed to "${newLabel}"`);
         return {
@@ -135,8 +160,28 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
         };
       }
       return elem;
-    }));
+    });
+    
+    setElements(newElements);
     setEditingLabel(null);
+    
+    // Notify parent of element changes
+    if (onElementsChange) {
+      onElementsChange(newElements);
+    }
+  };
+
+  const handleDeleteElement = (id: string) => {
+    const elementToDelete = elements.find(e => e.id === id);
+    const newElements = elements.filter(e => e.id !== id);
+    
+    setElements(newElements);
+    toast.info(`Removed ${elementToDelete?.label || 'element'}`);
+    
+    // Notify parent of element changes
+    if (onElementsChange) {
+      onElementsChange(newElements);
+    }
   };
 
   return (
@@ -144,17 +189,13 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
       <div className="p-3 border-b bg-muted dark:bg-gray-900 flex justify-between items-center">
         <h2 className="font-medium">Archi Whiteboard</h2>
         <div className="flex items-center space-x-1">
-          <Button variant="outline" size="icon" onClick={() => setScale(prev => Math.min(prev + 0.1, 2))} title="Zoom In">
+          <Button variant="outline" size="icon" onClick={handleZoomIn} title="Zoom In">
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={() => setScale(prev => Math.max(prev - 0.1, 0.5))} title="Zoom Out">
+          <Button variant="outline" size="icon" onClick={handleZoomOut} title="Zoom Out">
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={() => {
-            setElements([]);
-            setScale(1);
-            toast.info('Diagram reset');
-          }} title="Reset">
+          <Button variant="outline" size="icon" onClick={handleReset} title="Reset">
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
@@ -162,7 +203,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
       
       <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
         <svg 
-          ref={svgRef}
+          ref={effectiveSvgRef}
           width="100%" 
           height="100%" 
           viewBox="0 0 800 600"
@@ -172,7 +213,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
             minHeight: '600px',
             background: 'white',
           }}
-          className="min-h-[600px]"
+          className="min-h-[600px] dark:bg-gray-800"
           onMouseMove={handleDragMove}
           onMouseUp={handleDragEnd}
           onMouseLeave={handleDragEnd}
@@ -195,7 +236,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
                 x="400"
                 y="300"
                 textAnchor="middle"
-                className="fill-gray-400 text-sm"
+                className="fill-gray-400 text-sm dark:fill-gray-300"
               >
                 Start by asking the assistant to add elements to your diagram
               </text>
@@ -232,10 +273,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
                       <ContextMenuItem onClick={() => setEditingLabel(element.id)}>
                         Rename
                       </ContextMenuItem>
-                      <ContextMenuItem onClick={() => {
-                        setElements(prev => prev.filter(e => e.id !== element.id));
-                        toast.info('Element removed');
-                      }}>
+                      <ContextMenuItem onClick={() => handleDeleteElement(element.id)}>
                         Delete
                       </ContextMenuItem>
                     </>
