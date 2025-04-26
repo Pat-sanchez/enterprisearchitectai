@@ -51,6 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessage, onAiResponse }
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    console.log('Sending user message to handler:', input);
     onMessage(input);
     setInput('');
 

@@ -11,6 +11,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
+import { toast } from "sonner";
 
 interface DiagramCanvasProps {
   command?: string;
@@ -26,25 +27,54 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
   // Process commands when they arrive
   useEffect(() => {
     if (command) {
-      const newElements = processCommand(command, elements);
-      setElements(newElements);
+      console.log('DiagramCanvas received command:', command);
+      try {
+        const newElements = processCommand(command, elements);
+        console.log('Processed elements:', newElements);
+        
+        // Check if elements were actually added/modified
+        if (newElements.length !== elements.length) {
+          toast.success(`Added new ${command.toLowerCase().includes('database') ? 'database' : 
+                        command.toLowerCase().includes('service') ? 'service' : 
+                        command.toLowerCase().includes('api') ? 'API' : 
+                        command.toLowerCase().includes('user') ? 'user' : 
+                        command.toLowerCase().includes('microservice') ? 'microservice' : 
+                        command.toLowerCase().includes('system') ? 'system' : 
+                        command.toLowerCase().includes('container') ? 'container' : 
+                        command.toLowerCase().includes('component') ? 'component' : 
+                        'element'} to diagram`);
+        } else if (command.toLowerCase().includes('connect')) {
+          toast.success('Connected elements in diagram');
+        } else if (command.toLowerCase().includes('delete') || command.toLowerCase().includes('remove')) {
+          toast.info('Removed element from diagram');
+        }
+        
+        setElements(newElements);
+      } catch (error) {
+        console.error('Error processing diagram command:', error);
+        toast.error('Failed to update diagram');
+      }
     }
   }, [command]);
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.1, 2));
+    toast.info('Zoomed in');
   };
 
   const handleZoomOut = () => {
     setScale(prev => Math.max(prev - 0.1, 0.5));
+    toast.info('Zoomed out');
   };
 
   const handleReset = () => {
     setElements([]);
     setScale(1);
+    toast.info('Diagram reset');
   };
 
   const handleDragStart = (id: string, e: React.MouseEvent) => {
+    console.log('Starting drag for element:', id);
     setDraggedElement(id);
   };
 
@@ -55,7 +85,15 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
     const point = svg.createSVGPoint();
     point.x = e.clientX;
     point.y = e.clientY;
-    const svgPoint = point.matrixTransform(svg.getScreenCTM()?.inverse());
+    
+    // Check if getScreenCTM returns null
+    const screenCTM = svg.getScreenCTM();
+    if (!screenCTM) {
+      console.error('getScreenCTM returned null');
+      return;
+    }
+    
+    const svgPoint = point.matrixTransform(screenCTM.inverse());
 
     setElements(prev => prev.map(elem => {
       if (elem.id === draggedElement) {
@@ -72,12 +110,23 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
   };
 
   const handleDragEnd = () => {
+    if (draggedElement) {
+      console.log('Ended drag for element:', draggedElement);
+      toast.success('Element moved');
+    }
     setDraggedElement(null);
   };
 
   const handleRename = (id: string, newLabel: string) => {
+    console.log('Renaming element:', id, 'to', newLabel);
+    if (!newLabel.trim()) {
+      toast.error('Label cannot be empty');
+      return;
+    }
+    
     setElements(prev => prev.map(elem => {
       if (elem.id === id) {
+        toast.success(`Renamed to "${newLabel}"`);
         return {
           ...elem,
           label: newLabel
@@ -130,6 +179,16 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command }) => {
             </marker>
           </defs>
           <g>
+            {elements.length === 0 && (
+              <text
+                x="400"
+                y="300"
+                textAnchor="middle"
+                className="fill-gray-400 text-sm"
+              >
+                Start by asking the assistant to add elements to your diagram
+              </text>
+            )}
             {elements.map((element) => (
               <ContextMenu key={element.id}>
                 <ContextMenuTrigger>

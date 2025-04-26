@@ -8,12 +8,14 @@ const Index = () => {
   const [currentCommand, setCurrentCommand] = useState<string | undefined>();
 
   const handleUserMessage = (message: string) => {
-    console.log('User message:', message);
+    console.log('User message received:', message);
     setCurrentCommand(message);
   };
 
   const handleAiResponse = (message: any) => {
     console.log('AI response:', message);
+    // No need to set the command again from AI response
+    // This prevents duplicate processing
   };
 
   return (
