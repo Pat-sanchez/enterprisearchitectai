@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Glasses, 
@@ -16,7 +15,7 @@ import {
   History,
   Keyboard,
   HelpCircle,
-  Templates
+  LayoutTemplate
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -208,7 +207,7 @@ const Header: React.FC<HeaderProps> = ({
                     }
                   }}
                 >
-                  <Templates className="h-5 w-5" />
+                  <LayoutTemplate className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
