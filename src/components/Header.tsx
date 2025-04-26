@@ -1,9 +1,14 @@
-
 import React from 'react';
 import { Code, Save, Plus, RotateCcw, ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
 interface HeaderProps {
   activeTab: 'wizard' | 'import';
@@ -52,67 +57,93 @@ const Header: React.FC<HeaderProps> = ({
         </Tabs>
         
         <div className="flex items-center space-x-1">
-          {showWizardControls && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="hover:bg-primary/10" 
-              onClick={() => {
-                if (onBackToWizard) {
-                  onBackToWizard();
-                  toast.info('Returning to wizard questions');
-                }
-              }}
-              title="Back to Wizard Questions"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-primary/10" 
-            onClick={() => {
-              if (onNewDiagram) {
-                onNewDiagram();
-                toast.success('Created new diagram');
-              }
-            }}
-            title="New Diagram"
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-primary/10"
-            onClick={() => {
-              if (onSaveDiagram) {
-                onSaveDiagram();
-                toast.success('Diagram saved');
-              }
-            }}
-            title="Save Diagram"
-          >
-            <Save className="h-5 w-5" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-primary/10"
-            onClick={() => {
-              if (onResetDiagram) {
-                onResetDiagram();
-                toast.info('Diagram reset');
-              }
-            }}
-            title="Reset Diagram"
-          >
-            <RotateCcw className="h-5 w-5" />
-          </Button>
+          <TooltipProvider>
+            {showWizardControls && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="hover:bg-primary/10" 
+                    onClick={() => {
+                      if (onBackToWizard) {
+                        onBackToWizard();
+                        toast.info('Returning to wizard questions');
+                      }
+                    }}
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Back to Wizard Questions</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10" 
+                  onClick={() => {
+                    if (onNewDiagram) {
+                      onNewDiagram();
+                      toast.success('Created new diagram');
+                    }
+                  }}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create New Diagram</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    if (onSaveDiagram) {
+                      onSaveDiagram();
+                      toast.success('Diagram saved');
+                    }
+                  }}
+                >
+                  <Save className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Save Current Diagram</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hover:bg-primary/10"
+                  onClick={() => {
+                    if (onResetDiagram) {
+                      onResetDiagram();
+                      toast.info('Diagram reset');
+                    }
+                  }}
+                >
+                  <RotateCcw className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset Diagram to Initial State</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </header>
