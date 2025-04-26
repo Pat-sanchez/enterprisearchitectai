@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,15 +26,17 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
 
   const questions: Question[] = [
     {
-      id: 'system_type',
-      title: 'What type of system are you designing?',
-      description: 'Select the primary architecture style for your application',
+      id: 'purpose',
+      title: 'What is the purpose of your system?',
+      description: 'Select the primary purpose of your architecture',
       type: 'radio',
       options: [
-        { value: 'microservice', label: 'Microservice Architecture' },
-        { value: 'monolith', label: 'Monolithic Application' },
-        { value: 'serverless', label: 'Serverless Architecture' },
-        { value: 'event_driven', label: 'Event-Driven Architecture' },
+        { value: 'web_app', label: 'Web Application' },
+        { value: 'mobile_app', label: 'Mobile Application' },
+        { value: 'api_service', label: 'API Service' },
+        { value: 'microservices', label: 'Microservices Architecture' },
+        { value: 'ecommerce', label: 'E-commerce Platform' },
+        { value: 'cms', label: 'Content Management System (CMS)' },
       ],
     },
     {
@@ -51,27 +52,52 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
       type: 'textarea',
     },
     {
-      id: 'database_type',
-      title: 'What type of database will you use?',
-      description: 'Select the primary database type',
+      id: 'data_storage',
+      title: 'What type of data storage will you use?',
+      description: 'Select the primary storage solution',
       type: 'radio',
       options: [
-        { value: 'sql', label: 'SQL Database' },
-        { value: 'nosql', label: 'NoSQL Database' },
-        { value: 'graph', label: 'Graph Database' },
-        { value: 'multi', label: 'Multiple Database Types' },
+        { value: 'mysql', label: 'MySQL Database' },
+        { value: 'postgresql', label: 'PostgreSQL Database' },
+        { value: 'mongodb', label: 'MongoDB (NoSQL)' },
+        { value: 'firebase', label: 'Firebase' },
+        { value: 'multi', label: 'Multiple Storage Solutions' },
       ],
     },
     {
-      id: 'user_interface',
-      title: 'What type of user interface does your system have?',
-      description: 'Select all that apply',
+      id: 'communication',
+      title: 'How will components communicate?',
+      description: 'Select the primary communication protocol',
       type: 'radio',
       options: [
-        { value: 'web', label: 'Web Application' },
-        { value: 'mobile', label: 'Mobile App' },
-        { value: 'api', label: 'API Only' },
-        { value: 'mixed', label: 'Mixed Interfaces' },
+        { value: 'rest', label: 'REST APIs' },
+        { value: 'graphql', label: 'GraphQL' },
+        { value: 'grpc', label: 'gRPC' },
+        { value: 'event', label: 'Event-Driven (Message Brokers)' },
+      ],
+    },
+    {
+      id: 'auth_method',
+      title: 'What authentication method will you use?',
+      description: 'Select the primary authentication method',
+      type: 'radio',
+      options: [
+        { value: 'oauth', label: 'OAuth 2.0' },
+        { value: 'jwt', label: 'JWT Tokens' },
+        { value: 'basic', label: 'Basic Auth' },
+        { value: 'custom', label: 'Custom Authentication' },
+      ],
+    },
+    {
+      id: 'deployment',
+      title: 'Where will you deploy the system?',
+      description: 'Select the primary deployment environment',
+      type: 'radio',
+      options: [
+        { value: 'aws', label: 'AWS Cloud' },
+        { value: 'azure', label: 'Azure Cloud' },
+        { value: 'gcp', label: 'Google Cloud' },
+        { value: 'onprem', label: 'On-Premises' },
       ],
     },
   ];
@@ -105,21 +131,20 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
   };
 
   const generateDiagram = () => {
-    // Create commands based on collected answers
     const commands: string[] = [];
     
     // Create the main system
     commands.push(`system ${answers.system_name || 'Main System'}`);
     
-    // Add components based on system type and components
+    // Add components based on purpose and components
     if (answers.components) {
       const componentsList = answers.components.split(',').map(comp => comp.trim());
       
       componentsList.forEach((component, index) => {
-        if (answers.system_type === 'microservice') {
+        if (answers.purpose === 'microservices') {
           commands.push(`microservice ${component}`);
-        } else if (answers.system_type === 'monolith') {
-          commands.push(`component ${component}`);
+        } else if (answers.purpose === 'api_service') {
+          commands.push(`api ${component}`);
         } else {
           commands.push(`service ${component}`);
         }
@@ -128,22 +153,14 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
         if (index === 0) {
           commands.push(`connect ${answers.system_name || 'Main System'} to ${component}`);
         } else {
-          // Connect to previous component for a chain
           commands.push(`connect ${componentsList[index-1]} to ${component}`);
         }
       });
     }
     
     // Add database
-    if (answers.database_type) {
-      let dbName = 'Database';
-      switch (answers.database_type) {
-        case 'sql': dbName = 'SQL Database'; break;
-        case 'nosql': dbName = 'NoSQL Database'; break; 
-        case 'graph': dbName = 'Graph Database'; break;
-        case 'multi': dbName = 'Primary Database'; break;
-      }
-      
+    if (answers.data_storage) {
+      let dbName = `${answers.data_storage.toUpperCase()} Database`;
       commands.push(`database ${dbName}`);
       
       // Connect last component to database
@@ -155,55 +172,26 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
       }
     }
     
-    // Add UI elements
-    if (answers.user_interface) {
-      commands.push(`user Client User`);
-      
-      switch (answers.user_interface) {
-        case 'web':
-          commands.push(`service Web Interface`);
-          commands.push(`connect Client User to Web Interface`);
-          break;
-        case 'mobile':
-          commands.push(`service Mobile App`);
-          commands.push(`connect Client User to Mobile App`);
-          break;
-        case 'api':
-          commands.push(`api API Gateway`);
-          commands.push(`connect Client User to API Gateway`);
-          break;
-        case 'mixed':
-          commands.push(`service Web Interface`);
-          commands.push(`service Mobile App`);
-          commands.push(`api API Gateway`);
-          commands.push(`connect Client User to Web Interface`);
-          commands.push(`connect Client User to Mobile App`);
-          commands.push(`connect Web Interface to API Gateway`);
-          commands.push(`connect Mobile App to API Gateway`);
-          break;
-      }
-      
-      // Connect UI to main system or first component
-      const target = answers.components 
-        ? answers.components.split(',')[0].trim() 
-        : answers.system_name || 'Main System';
-        
-      if (answers.user_interface === 'mixed') {
-        commands.push(`connect API Gateway to ${target}`);
-      } else if (answers.user_interface === 'api') {
-        commands.push(`connect API Gateway to ${target}`);
-      } else {
-        const uiComponent = answers.user_interface === 'web' ? 'Web Interface' : 'Mobile App';
-        commands.push(`connect ${uiComponent} to ${target}`);
-      }
+    // Add authentication service if specified
+    if (answers.auth_method) {
+      const authName = `${answers.auth_method.toUpperCase()} Auth Service`;
+      commands.push(`service ${authName}`);
+      commands.push(`connect ${answers.system_name || 'Main System'} to ${authName}`);
     }
     
-    // Execute all commands with slight delay between them
+    // Add deployment environment
+    if (answers.deployment) {
+      const envName = `${answers.deployment.toUpperCase()} Environment`;
+      commands.push(`system ${envName}`);
+      commands.push(`connect ${answers.system_name || 'Main System'} to ${envName}`);
+    }
+    
+    // Execute all commands with slight delay
     executeCommandsSequentially(commands);
     
     toast.success("Generating architecture diagram based on your answers");
   };
-  
+
   const executeCommandsSequentially = (commands: string[]) => {
     let index = 0;
     const interval = setInterval(() => {
