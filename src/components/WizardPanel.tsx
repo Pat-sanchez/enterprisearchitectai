@@ -16,13 +16,14 @@ interface Question {
   id: string;
   title: string;
   description: string;
-  type: 'radio' | 'text' | 'textarea';
+  type: 'radio' | 'text' | 'textarea' | 'hybrid-components';
   options?: { value: string; label: string }[];
 }
 
 const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [customComponents, setCustomComponents] = useState<string>('');
 
   const questions: Question[] = [
     {
@@ -48,8 +49,18 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
     {
       id: 'components',
       title: 'What are the main components?',
-      description: 'List the main services/components, separated by commas',
-      type: 'textarea',
+      description: 'Select recommended components or add custom ones',
+      type: 'hybrid-components',
+      options: [
+        { value: 'user_service', label: 'User Service' },
+        { value: 'auth_service', label: 'Authentication Service' },
+        { value: 'api_gateway', label: 'API Gateway' },
+        { value: 'database_service', label: 'Database Service' },
+        { value: 'cache_service', label: 'Cache Service' },
+        { value: 'message_broker', label: 'Message Broker' },
+        { value: 'notification_service', label: 'Notification Service' },
+        { value: 'payment_service', label: 'Payment Service' },
+      ],
     },
     {
       id: 'data_storage',
@@ -124,6 +135,30 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
   };
 
   const handleAnswer = (value: string) => {
+    if (currentQuestion.type === 'hybrid-components') {
+      if (value === customComponents) {
+        setCustomComponents('');
+        setAnswers({
+          ...answers,
+          [currentQuestion.id]: '',
+        });
+      } else {
+        setCustomComponents('');
+        setAnswers({
+          ...answers,
+          [currentQuestion.id]: value,
+        });
+      }
+    } else {
+      setAnswers({
+        ...answers,
+        [currentQuestion.id]: value,
+      });
+    }
+  };
+
+  const handleCustomComponents = (value: string) => {
+    setCustomComponents(value);
     setAnswers({
       ...answers,
       [currentQuestion.id]: value,
@@ -206,6 +241,37 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
 
   const renderQuestionInput = () => {
     switch (currentQuestion.type) {
+      case 'hybrid-components':
+        return (
+          <div className="space-y-4 mt-4">
+            <RadioGroup 
+              value={answers[currentQuestion.id] || ''}
+              onValueChange={handleAnswer}
+              className="space-y-3"
+            >
+              {currentQuestion.options?.map((option) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option.value} id={option.value} />
+                  <Label htmlFor={option.value} className="cursor-pointer">
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+            <div className="pt-4 border-t">
+              <Label htmlFor="custom-components">Or add custom components (comma-separated)</Label>
+              <Textarea 
+                id="custom-components"
+                value={customComponents}
+                onChange={(e) => handleCustomComponents(e.target.value)}
+                placeholder="e.g., Search Service, Analytics Service, Report Generator"
+                rows={3}
+                className="mt-2"
+              />
+            </div>
+          </div>
+        );
+      
       case 'radio':
         return (
           <RadioGroup 
