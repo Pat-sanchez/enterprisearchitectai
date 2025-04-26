@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -170,9 +171,12 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
 
   const generateDiagram = () => {
     const commands: string[] = [];
+    const umlCode: string[] = [];
     
     // Create the main system
-    commands.push(`system ${answers.system_name || 'Main System'}`);
+    const systemName = answers.system_name || 'Main System';
+    commands.push(`system ${systemName}`);
+    umlCode.push(`[${systemName}]`);
     
     // Add components based on purpose and components
     if (answers.components) {
@@ -181,17 +185,24 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
       componentsList.forEach((component, index) => {
         if (answers.purpose === 'microservices') {
           commands.push(`microservice ${component}`);
+          umlCode.push(`[${component}]`);
+          umlCode.push(`[${systemName}] --> [${component}]`);
         } else if (answers.purpose === 'api_service') {
           commands.push(`api ${component}`);
+          umlCode.push(`[${component}]`);
+          umlCode.push(`[${systemName}] --> [${component}]`);
         } else {
           commands.push(`service ${component}`);
+          umlCode.push(`[${component}]`);
+          umlCode.push(`[${systemName}] --> [${component}]`);
         }
         
         // Connect to the main system
         if (index === 0) {
-          commands.push(`connect ${answers.system_name || 'Main System'} to ${component}`);
+          commands.push(`connect ${systemName} to ${component}`);
         } else {
           commands.push(`connect ${componentsList[index-1]} to ${component}`);
+          umlCode.push(`[${componentsList[index-1]}] --> [${component}]`);
         }
       });
     }
@@ -200,12 +211,14 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
     if (answers.data_storage) {
       let dbName = `${answers.data_storage.toUpperCase()} Database`;
       commands.push(`database ${dbName}`);
+      umlCode.push(`database "${dbName}"`);
       
       // Connect last component to database
       if (answers.components) {
         const lastComponent = answers.components.split(',').map(comp => comp.trim()).pop();
         if (lastComponent) {
           commands.push(`connect ${lastComponent} to ${dbName}`);
+          umlCode.push(`[${lastComponent}] --> "${dbName}"`);
         }
       }
     }
@@ -214,18 +227,25 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated }) => {
     if (answers.auth_method) {
       const authName = `${answers.auth_method.toUpperCase()} Auth Service`;
       commands.push(`service ${authName}`);
-      commands.push(`connect ${answers.system_name || 'Main System'} to ${authName}`);
+      umlCode.push(`[${authName}]`);
+      commands.push(`connect ${systemName} to ${authName}`);
+      umlCode.push(`[${systemName}] --> [${authName}]`);
     }
     
     // Add deployment environment
     if (answers.deployment) {
       const envName = `${answers.deployment.toUpperCase()} Environment`;
       commands.push(`system ${envName}`);
-      commands.push(`connect ${answers.system_name || 'Main System'} to ${envName}`);
+      umlCode.push(`node "${envName}"`);
+      commands.push(`connect ${systemName} to ${envName}`);
+      umlCode.push(`[${systemName}] --> "${envName}"`);
     }
     
     // Execute all commands with slight delay
     executeCommandsSequentially(commands);
+    
+    // Send UML code to developer panel
+    onCommandGenerated(`// UML Notation:\n${umlCode.join('\n')}`);
     
     toast.success("Generating architecture diagram based on your answers");
   };
