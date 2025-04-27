@@ -28,14 +28,20 @@ const Index = () => {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [showHelpDocs, setShowHelpDocs] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [plantUMLCode, setPlantUMLCode] = useState<string>('');
   const svgRef = useRef<SVGSVGElement>(null);
 
   const handleUserMessage = (message: string) => {
     console.log('User message received:', message);
-    setCurrentCommand(undefined);
-    setTimeout(() => {
-      setCurrentCommand(message);
-    }, 10);
+    
+    if (message.includes('@startuml') || message.includes('!theme')) {
+      setPlantUMLCode(message);
+    } else {
+      setCurrentCommand(undefined);
+      setTimeout(() => {
+        setCurrentCommand(message);
+      }, 10);
+    }
   };
 
   const handleNewDiagram = () => {
@@ -60,7 +66,11 @@ const Index = () => {
   };
 
   const handleWizardComplete = (message: string) => {
-    handleUserMessage(message);
+    if (message.includes('@startuml') || message.includes('!theme')) {
+      setPlantUMLCode(message);
+    } else {
+      handleUserMessage(message);
+    }
     setShowingDiagram(true);
   };
 
@@ -89,8 +99,6 @@ const Index = () => {
       toast.info(`Focused on element: ${element.label || element.type}`);
     }
   };
-
-  const plantUMLCode = generatePlantUMLCode(elements);
 
   useHotkeys([
     { keys: 'ctrl+n', callback: handleNewDiagram },
@@ -142,6 +150,7 @@ const Index = () => {
                 command={currentCommand} 
                 svgRef={svgRef}
                 onElementsChange={setElements}
+                plantUMLCode={plantUMLCode}
               />
               
               {elements.length > 0 && (

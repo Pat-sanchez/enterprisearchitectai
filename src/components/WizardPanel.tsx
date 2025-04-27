@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -170,39 +170,39 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
   };
 
   const generateDiagram = () => {
-    const commands: string[] = [];
-    const umlCode: string[] = [];
+    let plantUMLCode = '@startuml\n\n';
+    
+    // Add theme styling
+    plantUMLCode += '!theme plain\n';
+    plantUMLCode += 'skinparam backgroundColor transparent\n';
+    plantUMLCode += 'skinparam componentStyle rectangle\n\n';
     
     // Create the main system
     const systemName = answers.system_name || 'Main System';
-    commands.push(`system ${systemName}`);
-    umlCode.push(`[${systemName}]`);
+    plantUMLCode += `[${systemName}] as MainSystem\n`;
     
     // Add components based on purpose and components
     if (answers.components) {
       const componentsList = answers.components.split(',').map(comp => comp.trim());
+      const componentIds: Record<string, string> = {};
       
       componentsList.forEach((component, index) => {
+        const compId = `comp_${index + 1}`;
+        componentIds[component] = compId;
+        
         if (answers.purpose === 'microservices') {
-          commands.push(`microservice ${component}`);
-          umlCode.push(`[${component}]`);
-          umlCode.push(`[${systemName}] --> [${component}]`);
+          plantUMLCode += `component "${component}" as ${compId}\n`;
         } else if (answers.purpose === 'api_service') {
-          commands.push(`api ${component}`);
-          umlCode.push(`[${component}]`);
-          umlCode.push(`[${systemName}] --> [${component}]`);
+          plantUMLCode += `interface "${component}" as ${compId}\n`;
         } else {
-          commands.push(`service ${component}`);
-          umlCode.push(`[${component}]`);
-          umlCode.push(`[${systemName}] --> [${component}]`);
+          plantUMLCode += `[${component}] as ${compId}\n`;
         }
         
         // Connect to the main system
         if (index === 0) {
-          commands.push(`connect ${systemName} to ${component}`);
+          plantUMLCode += `MainSystem --> ${compId}\n`;
         } else {
-          commands.push(`connect ${componentsList[index-1]} to ${component}`);
-          umlCode.push(`[${componentsList[index-1]}] --> [${component}]`);
+          plantUMLCode += `${componentIds[componentsList[index-1]]} --> ${compId}\n`;
         }
       });
     }
@@ -210,15 +210,17 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
     // Add database
     if (answers.data_storage) {
       let dbName = `${answers.data_storage.toUpperCase()} Database`;
-      commands.push(`database ${dbName}`);
-      umlCode.push(`database "${dbName}"`);
+      let dbId = 'db_1';
+      plantUMLCode += `database "${dbName}" as ${dbId}\n`;
       
       // Connect last component to database
       if (answers.components) {
-        const lastComponent = answers.components.split(',').map(comp => comp.trim()).pop();
-        if (lastComponent) {
-          commands.push(`connect ${lastComponent} to ${dbName}`);
-          umlCode.push(`[${lastComponent}] --> "${dbName}"`);
+        const componentsList = answers.components.split(',').map(comp => comp.trim());
+        if (componentsList.length > 0) {
+          const lastCompId = `comp_${componentsList.length}`;
+          plantUMLCode += `${lastCompId} --> ${dbId}\n`;
+        } else {
+          plantUMLCode += `MainSystem --> ${dbId}\n`;
         }
       }
     }
@@ -226,40 +228,24 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
     // Add authentication service if specified
     if (answers.auth_method) {
       const authName = `${answers.auth_method.toUpperCase()} Auth Service`;
-      commands.push(`service ${authName}`);
-      umlCode.push(`[${authName}]`);
-      commands.push(`connect ${systemName} to ${authName}`);
-      umlCode.push(`[${systemName}] --> [${authName}]`);
+      plantUMLCode += `[${authName}] as auth_1\n`;
+      plantUMLCode += `MainSystem --> auth_1\n`;
     }
     
     // Add deployment environment
     if (answers.deployment) {
       const envName = `${answers.deployment.toUpperCase()} Environment`;
-      commands.push(`system ${envName}`);
-      umlCode.push(`node "${envName}"`);
-      commands.push(`connect ${systemName} to ${envName}`);
-      umlCode.push(`[${systemName}] --> "${envName}"`);
+      plantUMLCode += `node "${envName}" as env_1\n`;
+      plantUMLCode += `MainSystem --> env_1\n`;
     }
     
-    // Execute all commands with slight delay
-    executeCommandsSequentially(commands);
+    // Close PlantUML
+    plantUMLCode += '\n@enduml';
     
-    // Send UML code to developer panel
-    onCommandGenerated(`// UML Notation:\n${umlCode.join('\n')}`);
+    // Send PlantUML code to parent
+    onCommandGenerated(plantUMLCode);
     
     toast.success("Generating architecture diagram based on your answers");
-  };
-
-  const executeCommandsSequentially = (commands: string[]) => {
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < commands.length) {
-        onCommandGenerated(commands[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 500);
   };
 
   const renderQuestionInput = () => {
