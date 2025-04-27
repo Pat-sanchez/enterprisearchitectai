@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Element, generatePlantUMLCode } from '@/lib/diagramUtils';
 import { Button } from '@/components/ui/button';
-import { Copy, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import PlantUMLViewer from './PlantUMLViewer';
 
@@ -55,26 +55,12 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
     
     toast.info('Diagram reset');
   };
-  
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(plantUMLCode);
-    toast.success('PlantUML code copied to clipboard');
-  };
 
   return (
     <div className="flex flex-col h-full border rounded-lg overflow-hidden bg-white dark:bg-gray-950">
       <div className="p-3 border-b bg-muted dark:bg-gray-900 flex justify-between items-center">
-        <h2 className="font-medium">PlantUML Diagram</h2>
+        <h2 className="font-medium">Diagram Preview</h2>
         <div className="flex items-center space-x-1">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={handleCopyCode} 
-            title="Copy PlantUML Code"
-            disabled={!plantUMLCode}
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
           <Button 
             variant="outline" 
             size="icon" 
@@ -86,8 +72,16 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
-        <PlantUMLViewer plantUMLCode={plantUMLCode} />
+      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-4">
+        {plantUMLCode ? (
+          <pre className="whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-4 rounded-md text-xs font-mono overflow-auto">
+            {plantUMLCode}
+          </pre>
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            Complete the wizard to generate a diagram
+          </div>
+        )}
       </div>
     </div>
   );

@@ -21,25 +21,32 @@ const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ onCommandGenerated, pla
       </div>
       
       <div className="flex-1 space-y-4">
-        <div className="text-xs text-muted-foreground mb-2">
-          Use this code with a PlantUML plugin or at <a href="https://www.planttext.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">planttext.com</a>
-        </div>
         <Textarea
           value={plantUMLCode}
           readOnly
-          placeholder="Create a diagram to generate PlantUML code..."
-          className="font-mono text-xs flex-1 h-[calc(100%-120px)]"
+          placeholder="Complete the wizard to generate PlantUML code..."
+          className="font-mono text-xs flex-1 h-[calc(100%-80px)]"
         />
-        <Button 
-          onClick={() => {
-            navigator.clipboard.writeText(plantUMLCode);
-            toast.success('PlantUML code copied to clipboard');
-          }}
-          className="w-full"
-          disabled={!plantUMLCode}
-        >
-          Copy PlantUML Code
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => {
+              navigator.clipboard.writeText(plantUMLCode);
+              toast.success('PlantUML code copied to clipboard');
+            }}
+            className="flex-1"
+            disabled={!plantUMLCode}
+          >
+            Copy Code
+          </Button>
+          <Button
+            onClick={() => onCommandGenerated(plantUMLCode)}
+            className="flex-1"
+            variant="secondary"
+            disabled={!plantUMLCode}
+          >
+            Update Diagram
+          </Button>
+        </div>
       </div>
     </div>
   );
