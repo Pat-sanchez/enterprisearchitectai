@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Element, generatePlantUMLCode } from '@/lib/diagramUtils';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,6 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
     }
   }, [command, externalPlantUMLCode]);
 
-  // Update when external PlantUML code changes
   useEffect(() => {
     if (externalPlantUMLCode) {
       setPlantUMLCode(externalPlantUMLCode);
@@ -55,7 +53,6 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
     toast.info('Diagram reset');
   };
 
-  // Parse PlantUML code and generate SVG elements
   const renderDiagram = () => {
     if (!plantUMLCode) return null;
 
@@ -70,10 +67,8 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
     lines.forEach((line, index) => {
       if (line.includes('database') || line.includes('[') || 
           line.includes('component') || line.includes('interface')) {
-        // Extract label from line
         const label = line.match(/"([^"]+)"|(\[[^\]]+\])/)?.[1] || 'Element';
         
-        // Create a rectangle or database symbol
         if (line.includes('database')) {
           diagramElements.push(
             <g key={`element-${index}`} transform={`translate(50, ${yOffset})`}>
@@ -103,7 +98,6 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
         }
         yOffset += itemHeight + padding;
       } else if (line.includes('-->')) {
-        // Draw arrows between elements
         const elements = line.split('-->').map(s => s.trim());
         if (elements.length === 2) {
           const startY = (elements[0].length * itemHeight) / 2;
@@ -166,12 +160,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
       
       <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-4">
         {plantUMLCode ? (
-          <div className="space-y-4">
-            {renderDiagram()}
-            <pre className="whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-4 rounded-md text-xs font-mono overflow-auto">
-              {plantUMLCode}
-            </pre>
-          </div>
+          renderDiagram()
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             Complete the wizard to generate a diagram
@@ -183,4 +172,3 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
 };
 
 export default DiagramCanvas;
-
