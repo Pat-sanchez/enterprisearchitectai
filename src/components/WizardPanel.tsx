@@ -172,15 +172,12 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
   const generateDiagram = () => {
     const systemName = answers.system_name || 'Main System';
     
-    // Start PlantUML code
     let plantUMLCode = '@startuml\n\n';
     
-    // Add theme and styling
     plantUMLCode += '!theme plain\n';
     plantUMLCode += 'skinparam backgroundColor transparent\n';
     plantUMLCode += 'skinparam componentStyle rectangle\n\n';
     
-    // Determine system style based on purpose
     let systemShape = '';
     switch (answers.purpose) {
       case 'web_app':
@@ -207,42 +204,51 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
     
     plantUMLCode += systemShape;
     
-    // Add components
     if (answers.components) {
       const componentsList = answers.components.split(',').map(comp => comp.trim());
+      const processedComponents = new Set<string>();
       
       componentsList.forEach((component, index) => {
-        const compId = `comp_${index + 1}`;
-        
-        if (component.toLowerCase().includes('service')) {
-          plantUMLCode += `  [${component}] as ${compId}\n`;
-        } else if (component.toLowerCase().includes('database') || 
-                 component.toLowerCase().includes('storage')) {
-          plantUMLCode += `  database "${component}" as ${compId}\n`;
-        } else if (component.toLowerCase().includes('api') || 
-                 component.toLowerCase().includes('gateway')) {
-          plantUMLCode += `  interface "${component}" as ${compId}\n`;
-        } else if (component.toLowerCase().includes('broker') || 
-                 component.toLowerCase().includes('queue')) {
-          plantUMLCode += `  queue "${component}" as ${compId}\n`;
-        } else {
-          plantUMLCode += `  [${component}] as ${compId}\n`;
+        if (!processedComponents.has(component)) {
+          const compId = `comp_${index + 1}`;
+          
+          if (component.toLowerCase().includes('service')) {
+            plantUMLCode += `  [${component}] as ${compId}\n`;
+          } else if (component.toLowerCase().includes('database') || 
+                   component.toLowerCase().includes('storage')) {
+            plantUMLCode += `  database "${component}" as ${compId}\n`;
+          } else if (component.toLowerCase().includes('api') || 
+                   component.toLowerCase().includes('gateway')) {
+            plantUMLCode += `  interface "${component}" as ${compId}\n`;
+          } else if (component.toLowerCase().includes('broker') || 
+                   component.toLowerCase().includes('queue')) {
+            plantUMLCode += `  queue "${component}" as ${compId}\n`;
+          } else {
+            plantUMLCode += `  [${component}] as ${compId}\n`;
+          }
+          
+          processedComponents.add(component);
         }
       });
       
-      // Add component connections
+      const connectedComponents = new Set<string>();
+      
       for (let i = 0; i < componentsList.length - 1; i++) {
-        plantUMLCode += `  comp_${i + 1} --> comp_${i + 2}\n`;
+        const source = `comp_${i + 1}`;
+        const target = `comp_${i + 2}`;
+        const connectionKey = `${source}-${target}`;
+        
+        if (!connectedComponents.has(connectionKey)) {
+          plantUMLCode += `  ${source} --> ${target}\n`;
+          connectedComponents.add(connectionKey);
+        }
       }
     }
     
-    // Close the main system
     plantUMLCode += '}\n\n';
     
-    // Add database if specified
     if (answers.data_storage) {
       let dbName = '';
-      
       switch (answers.data_storage) {
         case 'mysql':
           dbName = 'MySQL Database';
@@ -267,10 +273,8 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
       plantUMLCode += 'MainSystem --> DB\n\n';
     }
     
-    // Add external services based on chosen authentication
     if (answers.auth_method) {
       let authName = '';
-      
       switch (answers.auth_method) {
         case 'oauth':
           authName = 'OAuth 2.0 Service';
@@ -292,35 +296,9 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
       plantUMLCode += 'MainSystem --> Auth\n\n';
     }
     
-    // Add communication protocols
-    if (answers.communication) {
-      let noteName = '';
-      
-      switch(answers.communication) {
-        case 'rest':
-          noteName = 'Communication: REST APIs';
-          break;
-        case 'graphql':
-          noteName = 'Communication: GraphQL';
-          break;
-        case 'grpc':
-          noteName = 'Communication: gRPC';
-          break;
-        case 'event':
-          noteName = 'Communication: Event-Driven';
-          break;
-        default:
-          noteName = 'Communication Protocol';
-      }
-      
-      plantUMLCode += `note right of MainSystem\n  ${noteName}\nend note\n\n`;
-    }
-    
-    // Add deployment environment
     if (answers.deployment) {
       let envName = '';
       let envColor = '';
-      
       switch (answers.deployment) {
         case 'aws':
           envName = 'AWS Cloud';
@@ -347,13 +325,10 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
       plantUMLCode += 'MainSystem .... Env : deployed on\n\n';
     }
     
-    // Close PlantUML
     plantUMLCode += '@enduml';
     
-    // Send PlantUML code to parent component
     console.log('Generated PlantUML code:', plantUMLCode);
     onCommandGenerated(plantUMLCode);
-    
     toast.success("Generating architecture diagram based on your answers");
   };
 
