@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Element, processCommand } from '@/lib/diagramUtils';
 import ArchitecturalElement from './ArchitecturalElement';
@@ -36,25 +35,34 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
         const newElements = processCommand(command, elements);
         console.log('Processed elements:', newElements);
         
-        if (newElements.length !== elements.length) {
-          const componentType = 
-            command.toLowerCase().includes('database') ? 'database' : 
-            command.toLowerCase().includes('service') ? 'service' : 
-            command.toLowerCase().includes('api') ? 'API' : 
-            command.toLowerCase().includes('user') ? 'user' : 
-            command.toLowerCase().includes('microservice') ? 'microservice' : 
-            command.toLowerCase().includes('system') ? 'system' : 
-            command.toLowerCase().includes('container') ? 'container' : 
-            command.toLowerCase().includes('component') ? 'component' : 
-            'element';
-          
-          toast.success(`Added new ${componentType} to diagram`);
-        } else if (command.toLowerCase().includes('connect')) {
-          toast.success('Connected elements in diagram');
-        } else if (command.toLowerCase().includes('delete') || command.toLowerCase().includes('remove')) {
-          toast.info('Removed element from diagram');
-        } else if (command.toLowerCase() === 'reset') {
+        if (command.toLowerCase() === 'reset') {
           toast.info('Diagram reset');
+        } else if (newElements.length > elements.length) {
+          // A new element was added
+          const newElement = newElements[newElements.length - 1];
+          
+          // Determine what type of component was added
+          if (newElement.type === 'connection') {
+            toast.success('Connected elements in diagram');
+          } else {
+            const componentType = 
+              newElement.type === 'database' ? 'database' : 
+              newElement.type === 'service' ? 'service' : 
+              newElement.type === 'api' ? 'API' : 
+              newElement.type === 'user' ? 'user' : 
+              newElement.type === 'microservice' ? 'microservice' : 
+              newElement.type === 'system' ? 'system' : 
+              newElement.type === 'container' ? 'container' : 
+              newElement.type === 'component' ? 'component' : 
+              'element';
+            
+            toast.success(`Added new ${componentType} to diagram`);
+          }
+        } else if (newElements.length < elements.length) {
+          toast.info('Removed element from diagram');
+        } else if (command.toLowerCase().includes('connect')) {
+          // Connection was attempted but failed
+          toast.error('Could not connect elements. Make sure both elements exist.');
         }
         
         setElements(newElements);
@@ -113,10 +121,13 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
     
     const svgPoint = point.matrixTransform(screenCTM.inverse());
 
-    const newElements = elements.map(elem => {
+    // Find the dragged element
+    const draggedElem = elements.find(elem => elem.id === draggedElement);
+    if (!draggedElem || draggedElem.type === 'connection') return;
+
+    // Update the element's position
+    const updatedElements = elements.map(elem => {
       if (elem.id === draggedElement) {
-        if (elem.type === 'connection') return elem;
-        
         return {
           ...elem,
           position: {
@@ -127,12 +138,80 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
       }
       return elem;
     });
+
+    // Update connections involving the dragged element
+    const updatedWithConnections = updatedElements.map(elem => {
+      if (elem.type === 'connection' && elem.properties) {
+        const connectionLabel = elem.label || '';
+        const draggedLabel = draggedElem.label || '';
+
+        // Check if this connection involves the dragged element
+        if (connectionLabel.includes(draggedLabel)) {
+          // Find source and target elements
+          const sourceTargetMatch = connectionLabel.match(/(.+) to (.+)/);
+          
+          if (sourceTargetMatch) {
+            const [, sourceLabel, targetLabel] = sourceTargetMatch;
+            const isSource = sourceLabel === draggedLabel;
+            const otherLabel = isSource ? targetLabel : sourceLabel;
+            
+            // Find the other element in the connection
+            const otherElement = elements.find(e => e.label === otherLabel);
+            
+            if (otherElement) {
+              const updatedDraggedElem = updatedElements.find(e => e.id === draggedElement);
+              
+              if (updatedDraggedElem) {
+                // Calculate new connection points
+                const startPoint = isSource ? 
+                  {
+                    x: updatedDraggedElem.position.x + updatedDraggedElem.size.width / 2,
+                    y: updatedDraggedElem.position.y + updatedDraggedElem.size.height / 2
+                  } : 
+                  {
+                    x: otherElement.position.x + otherElement.size.width / 2,
+                    y: otherElement.position.y + otherElement.size.height / 2
+                  };
+                
+                const endPoint = isSource ?
+                  {
+                    x: otherElement.position.x + otherElement.size.width / 2,
+                    y: otherElement.position.y + otherElement.size.height / 2
+                  } :
+                  {
+                    x: updatedDraggedElem.position.x + updatedDraggedElem.size.width / 2,
+                    y: updatedDraggedElem.position.y + updatedDraggedElem.size.height / 2
+                  };
+                
+                return {
+                  ...elem,
+                  position: {
+                    x: Math.min(startPoint.x, endPoint.x),
+                    y: Math.min(startPoint.y, endPoint.y)
+                  },
+                  size: {
+                    width: Math.abs(endPoint.x - startPoint.x),
+                    height: Math.abs(endPoint.y - startPoint.y)
+                  },
+                  properties: {
+                    ...elem.properties,
+                    startPoint,
+                    endPoint
+                  }
+                };
+              }
+            }
+          }
+        }
+      }
+      return elem;
+    });
     
-    setElements(newElements);
+    setElements(updatedWithConnections);
     
     // Notify parent of element changes
     if (onElementsChange) {
-      onElementsChange(newElements);
+      onElementsChange(updatedWithConnections);
     }
   };
 
@@ -151,9 +230,14 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
       return;
     }
     
-    const newElements = elements.map(elem => {
+    const elementToRename = elements.find(elem => elem.id === id);
+    if (!elementToRename) return;
+    
+    const oldLabel = elementToRename.label || '';
+    
+    // Update the element's label
+    const updatedElements = elements.map(elem => {
       if (elem.id === id) {
-        toast.success(`Renamed to "${newLabel}"`);
         return {
           ...elem,
           label: newLabel
@@ -162,25 +246,54 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
       return elem;
     });
     
-    setElements(newElements);
+    // Update any connection labels that reference this element
+    const finalUpdatedElements = updatedElements.map(elem => {
+      if (elem.type === 'connection' && elem.label) {
+        // Replace old label in connection labels
+        return {
+          ...elem,
+          label: elem.label.replace(oldLabel, newLabel)
+        };
+      }
+      return elem;
+    });
+    
+    toast.success(`Renamed to "${newLabel}"`);
+    setElements(finalUpdatedElements);
     setEditingLabel(null);
     
     // Notify parent of element changes
     if (onElementsChange) {
-      onElementsChange(newElements);
+      onElementsChange(finalUpdatedElements);
     }
   };
 
   const handleDeleteElement = (id: string) => {
     const elementToDelete = elements.find(e => e.id === id);
-    const newElements = elements.filter(e => e.id !== id);
+    if (!elementToDelete) return;
     
-    setElements(newElements);
+    const elementLabel = elementToDelete.label || '';
+    
+    // Remove the element
+    let updatedElements = elements.filter(e => e.id !== id);
+    
+    // Also remove any connections involving this element
+    if (elementLabel) {
+      updatedElements = updatedElements.filter(elem => {
+        if (elem.type === 'connection' && elem.label) {
+          // Keep connections that don't involve this element
+          return !elem.label.includes(elementLabel);
+        }
+        return true;
+      });
+    }
+    
+    setElements(updatedElements);
     toast.info(`Removed ${elementToDelete?.label || 'element'}`);
     
     // Notify parent of element changes
     if (onElementsChange) {
-      onElementsChange(newElements);
+      onElementsChange(updatedElements);
     }
   };
 

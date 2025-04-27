@@ -160,55 +160,118 @@ export const createConnection = (
   };
 };
 
+// Helper to find element by label (case-insensitive)
+const findElementByLabel = (elements: Element[], label: string): Element | undefined => {
+  return elements.find(element => 
+    element.label?.toLowerCase() === label.toLowerCase()
+  );
+};
+
+// Helper to generate non-overlapping position
+const generatePosition = (elements: Element[], baseX = 400, baseY = 150, spacing = 50): Point => {
+  // If no elements, return base position
+  if (elements.length === 0) return { x: baseX, y: baseY };
+  
+  // Try to position in a grid layout
+  const cols = 3;
+  const index = elements.length;
+  const col = index % cols;
+  const row = Math.floor(index / cols);
+  
+  return {
+    x: baseX + (col * spacing * 1.5) - spacing,
+    y: baseY + (row * spacing * 1.5),
+  };
+};
+
 export const processCommand = (command: string, elements: Element[]): Element[] => {
   const cmd = command.toLowerCase();
   let newElements = [...elements];
   
+  // Handle reset command first
+  if (cmd === 'reset') {
+    return [];
+  }
+  
+  // Element creation commands
   if (cmd.includes('service')) {
     const label = extractLabel(command, 'service');
-    newElements.push(createService({ x: 400, y: 150 }, label));
+    newElements.push(createService(generatePosition(elements), label));
   } else if (cmd.includes('database')) {
     const label = extractLabel(command, 'database');
-    newElements.push(createDatabase({ x: 400, y: 300 }, label));
+    newElements.push(createDatabase(generatePosition(elements), label));
   } else if (cmd.includes('api')) {
     const label = extractLabel(command, 'api');
-    newElements.push(createApi({ x: 400, y: 220 }, label));
+    newElements.push(createApi(generatePosition(elements), label));
   } else if (cmd.includes('microservice')) {
     const label = extractLabel(command, 'microservice');
-    newElements.push(createMicroservice({ x: 400, y: 380 }, label));
+    newElements.push(createMicroservice(generatePosition(elements), label));
   } else if (cmd.includes('user')) {
     const label = extractLabel(command, 'user');
-    newElements.push(createUser({ x: 200, y: 150 }, label));
+    newElements.push(createUser(generatePosition(elements), label));
   } else if (cmd.includes('system')) {
     const label = extractLabel(command, 'system');
-    newElements.push(createSystem({ x: 400, y: 200 }, label));
+    newElements.push(createSystem(generatePosition(elements), label));
   } else if (cmd.includes('container')) {
     const label = extractLabel(command, 'container');
-    newElements.push(createContainer({ x: 400, y: 300 }, label));
+    newElements.push(createContainer(generatePosition(elements), label));
   } else if (cmd.includes('component')) {
     const label = extractLabel(command, 'component');
-    newElements.push(createComponent({ x: 400, y: 400 }, label));
-  } else if (cmd.includes('connect')) {
-    if (elements.length >= 2) {
-      const lastTwo = elements.slice(-2);
-      const e1 = lastTwo[0];
-      const e2 = lastTwo[1];
+    newElements.push(createComponent(generatePosition(elements), label));
+  } 
+  // Connect command
+  else if (cmd.includes('connect')) {
+    // Extract source and target from command
+    const connectRegex = /connect\s+["']?([^"']+)["']?\s+to\s+["']?([^"']+)["']?/i;
+    const match = command.match(connectRegex);
+    
+    if (match && match[1] && match[2]) {
+      const sourceLabel = match[1].trim();
+      const targetLabel = match[2].trim();
       
-      const startPoint = {
-        x: e1.position.x + e1.size.width / 2,
-        y: e1.position.y + e1.size.height / 2
-      };
+      const sourceElement = findElementByLabel(elements, sourceLabel);
+      const targetElement = findElementByLabel(elements, targetLabel);
       
-      const endPoint = {
-        x: e2.position.x + e2.size.width / 2,
-        y: e2.position.y + e2.size.height / 2
-      };
-      
-      const label = extractLabel(command, 'connect');
-      newElements.push(createConnection(startPoint, endPoint, label));
+      if (sourceElement && targetElement) {
+        // Calculate connection points from element centers
+        const startPoint = {
+          x: sourceElement.position.x + sourceElement.size.width / 2,
+          y: sourceElement.position.y + sourceElement.size.height / 2
+        };
+        
+        const endPoint = {
+          x: targetElement.position.x + targetElement.size.width / 2,
+          y: targetElement.position.y + targetElement.size.height / 2
+        };
+        
+        const connectionLabel = `${sourceLabel} to ${targetLabel}`;
+        newElements.push(createConnection(startPoint, endPoint, connectionLabel));
+      }
     }
-  } else if (cmd.includes('delete') || cmd.includes('remove')) {
-    if (newElements.length > 0) {
+  } 
+  // Delete/remove command
+  else if (cmd.includes('delete') || cmd.includes('remove')) {
+    const deleteRegex = /(delete|remove)\s+["']?([^"']+)["']?/i;
+    const match = command.match(deleteRegex);
+    
+    if (match && match[2]) {
+      const elementLabel = match[2].trim();
+      const elementToRemove = findElementByLabel(elements, elementLabel);
+      
+      if (elementToRemove) {
+        // Remove the element with matching label
+        newElements = newElements.filter(el => el.id !== elementToRemove.id);
+        
+        // Also remove any connections involving this element
+        newElements = newElements.filter(el => {
+          if (el.type !== 'connection') return true;
+          
+          const connectionLabel = el.label || '';
+          return !connectionLabel.includes(elementLabel);
+        });
+      }
+    } else if (newElements.length > 0) {
+      // Default: remove last element if no specific element mentioned
       newElements.pop();
     }
   }
