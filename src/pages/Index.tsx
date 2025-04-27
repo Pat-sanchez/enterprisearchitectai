@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import Header from '@/components/Header';
 import DiagramCanvas from '@/components/DiagramCanvas';
@@ -12,7 +11,7 @@ import KeyboardShortcutsDialog from '@/components/KeyboardShortcutsDialog';
 import HelpDocumentationDialog from '@/components/HelpDocumentationDialog';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { exportAsSVG, exportAsPNG, exportAsJSON } from '@/lib/exportUtils';
-import { Element } from '@/lib/diagramUtils';
+import { Element, generatePlantUMLCode } from '@/lib/diagramUtils';
 import { useHotkeys } from '@/hooks/useHotkeys';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,6 @@ const Index = () => {
   };
 
   const handleSaveDiagram = () => {
-    // For now just log, could be expanded to actually save the diagram
     console.log('Save diagram triggered');
     localStorage.setItem('savedDiagram', JSON.stringify(elements));
     toast.success('Diagram saved to local storage');
@@ -80,22 +78,20 @@ const Index = () => {
   };
 
   const handleRestoreVersion = (versionId: string) => {
-    // For demo purposes, we'll just show a toast
     console.log('Restore version triggered:', versionId);
     toast.success(`Restored to version ${versionId}`);
   };
 
   const handleFocusElement = (elementId: string) => {
-    // Find the element and focus it (highlight or scroll to it)
     const element = elements.find(el => el.id === elementId);
     if (element) {
       console.log('Focusing element:', element);
       toast.info(`Focused on element: ${element.label || element.type}`);
-      // In a real implementation, we would scroll/zoom to the element
     }
   };
 
-  // Register keyboard shortcuts
+  const plantUMLCode = generatePlantUMLCode(elements);
+
   useHotkeys([
     { keys: 'ctrl+n', callback: handleNewDiagram },
     { keys: 'ctrl+s', callback: handleSaveDiagram },
@@ -175,7 +171,7 @@ const Index = () => {
         </ResizablePanelGroup>
       </div>
       
-      <DeveloperPanel onCommandGenerated={handleUserMessage} />
+      <DeveloperPanel onCommandGenerated={handleUserMessage} plantUMLCode={plantUMLCode} />
       
       <footer className="border-t py-3 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
@@ -183,7 +179,6 @@ const Index = () => {
         </div>
       </footer>
       
-      {/* Dialogs */}
       <TemplatesDialog
         open={showTemplatesDialog}
         onClose={() => setShowTemplatesDialog(false)}

@@ -1,15 +1,18 @@
+
 import React, { useState } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Code, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import UMLHelp from './UMLHelp';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DeveloperPanelProps {
   onCommandGenerated: (command: string) => void;
+  plantUMLCode?: string;
 }
 
-const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ onCommandGenerated }) => {
+const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ onCommandGenerated, plantUMLCode = '' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [code, setCode] = useState('');
 
@@ -60,21 +63,60 @@ const DeveloperPanel: React.FC<DeveloperPanelProps> = ({ onCommandGenerated }) =
         
         {isExpanded && (
           <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">
-                Write your diagram code:
-              </label>
-              <Textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Enter your diagram code here..."
-                className="font-mono text-sm"
-                rows={5}
-              />
-            </div>
-            <Button onClick={handleCodeSubmit} className="w-full">
-              Generate Diagram
-            </Button>
+            <Tabs defaultValue="input">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="input">Input</TabsTrigger>
+                <TabsTrigger value="plantuml">PlantUML</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="input" className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">
+                    Write your diagram code:
+                  </label>
+                  <Textarea
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="Enter your diagram code here..."
+                    className="font-mono text-sm"
+                    rows={5}
+                  />
+                </div>
+                <Button onClick={handleCodeSubmit} className="w-full">
+                  Generate Diagram
+                </Button>
+              </TabsContent>
+              
+              <TabsContent value="plantuml">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">
+                      PlantUML Code:
+                    </label>
+                    <div className="text-xs text-muted-foreground mb-2">
+                      Use this code with a PlantUML plugin or at <a href="https://www.planttext.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">planttext.com</a>
+                    </div>
+                    <Textarea
+                      value={plantUMLCode}
+                      readOnly
+                      placeholder="Create a diagram to generate PlantUML code..."
+                      className="font-mono text-xs"
+                      rows={10}
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(plantUMLCode);
+                      toast.success('PlantUML code copied to clipboard');
+                    }}
+                    className="w-full"
+                    disabled={!plantUMLCode}
+                  >
+                    Copy PlantUML Code
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </div>

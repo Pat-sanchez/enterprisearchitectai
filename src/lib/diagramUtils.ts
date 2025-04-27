@@ -291,3 +291,87 @@ const extractLabel = (command: string, entityType: string): string => {
   // If no specific name found, capitalize the entity type as default label
   return entityType.charAt(0).toUpperCase() + entityType.slice(1);
 };
+
+// NEW: Function to generate PlantUML code from diagram elements
+export const generatePlantUMLCode = (elements: Element[]): string => {
+  let plantUml = '@startuml\n\n';
+  
+  // Add theme styling
+  plantUml += '!theme plain\n';
+  plantUml += 'skinparam backgroundColor transparent\n';
+  plantUml += 'skinparam componentStyle rectangle\n\n';
+
+  // Track processed connections to avoid duplicates
+  const processedConnections = new Set<string>();
+  
+  // First, create all elements
+  elements.filter(el => el.type !== 'connection').forEach(element => {
+    const label = element.label || element.type;
+    
+    switch (element.type) {
+      case 'database':
+        plantUml += `database "${label}" as ${sanitizeId(element.id)}\n`;
+        break;
+      case 'service':
+        plantUml += `[${label}] as ${sanitizeId(element.id)}\n`;
+        break;
+      case 'api':
+        plantUml += `interface "${label}" as ${sanitizeId(element.id)}\n`;
+        break;
+      case 'microservice':
+        plantUml += `component "${label}" as ${sanitizeId(element.id)}\n`;
+        break;
+      case 'user':
+        plantUml += `actor "${label}" as ${sanitizeId(element.id)}\n`;
+        break;
+      case 'system':
+        plantUml += `package "${label}" as ${sanitizeId(element.id)} {\n}\n`;
+        break;
+      case 'container':
+        plantUml += `rectangle "${label}" as ${sanitizeId(element.id)}\n`;
+        break;
+      case 'component':
+        plantUml += `component "${label}" as ${sanitizeId(element.id)}\n`;
+        break;
+      default:
+        plantUml += `[${label}] as ${sanitizeId(element.id)}\n`;
+    }
+  });
+  
+  plantUml += '\n';
+  
+  // Then, create all connections
+  elements.filter(el => el.type === 'connection').forEach(connection => {
+    if (connection.label) {
+      // Extract source and target from connection label
+      const match = connection.label.match(/(.+) to (.+)/);
+      
+      if (match && match[1] && match[2]) {
+        const sourceLabel = match[1].trim();
+        const targetLabel = match[2].trim();
+        
+        // Find elements by their labels
+        const sourceElement = findElementByLabel(elements, sourceLabel);
+        const targetElement = findElementByLabel(elements, targetLabel);
+        
+        if (sourceElement && targetElement) {
+          const connectionKey = `${sourceElement.id}-${targetElement.id}`;
+          
+          if (!processedConnections.has(connectionKey)) {
+            plantUml += `${sanitizeId(sourceElement.id)} --> ${sanitizeId(targetElement.id)}\n`;
+            processedConnections.add(connectionKey);
+          }
+        }
+      }
+    }
+  });
+  
+  plantUml += '\n@enduml';
+  return plantUml;
+};
+
+// Helper to sanitize element IDs for PlantUML
+const sanitizeId = (id: string): string => {
+  return id.replace(/[^a-zA-Z0-9]/g, '_');
+};
+

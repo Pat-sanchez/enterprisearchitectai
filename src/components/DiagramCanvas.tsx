@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Element, processCommand } from '@/lib/diagramUtils';
+import { Element, processCommand, generatePlantUMLCode } from '@/lib/diagramUtils';
 import ArchitecturalElement from './ArchitecturalElement';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Code } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -11,6 +11,15 @@ import {
 } from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea";
 
 interface DiagramCanvasProps {
   command?: string;
@@ -23,6 +32,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
   const [scale, setScale] = useState(1);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
+  const [showPlantUML, setShowPlantUML] = useState(false);
   const localSvgRef = React.useRef<SVGSVGElement>(null);
   
   // Use provided ref or local ref
@@ -297,11 +307,45 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ command, svgRef, onElemen
     }
   };
 
+  const handleGeneratePlantUML = () => {
+    setShowPlantUML(true);
+    toast.success('PlantUML code generated');
+  };
+
+  const handleCopyPlantUML = () => {
+    const plantUMLCode = generatePlantUMLCode(elements);
+    navigator.clipboard.writeText(plantUMLCode);
+    toast.success('PlantUML code copied to clipboard');
+  };
+
   return (
     <div className="flex flex-col h-full border rounded-lg overflow-hidden bg-white dark:bg-gray-950">
       <div className="p-3 border-b bg-muted dark:bg-gray-900 flex justify-between items-center">
         <h2 className="font-medium">Archi Whiteboard</h2>
         <div className="flex items-center space-x-1">
+          <Dialog open={showPlantUML} onOpenChange={setShowPlantUML}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" onClick={handleGeneratePlantUML} title="Generate PlantUML">
+                <Code className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>PlantUML Code</DialogTitle>
+                <DialogDescription>
+                  Copy this code and paste it into a PlantUML editor to visualize your diagram
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4">
+                <Textarea 
+                  className="font-mono text-xs h-[300px] overflow-auto"
+                  value={generatePlantUMLCode(elements)}
+                  readOnly
+                />
+                <Button onClick={handleCopyPlantUML}>Copy to Clipboard</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" size="icon" onClick={handleZoomIn} title="Zoom In">
             <ZoomIn className="h-4 w-4" />
           </Button>
