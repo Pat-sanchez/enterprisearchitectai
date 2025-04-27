@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Code } from 'lucide-react';
 import {
   HoverCard,
   HoverCardContent,
@@ -70,7 +70,7 @@ const UMLHelp = () => {
                   !theme plain{'\n'}
                   [Service] as service_1{'\n'}
                   database "Database" as db_1{'\n'}
-                  service_1 --> db_1{'\n'}
+                  service_1 --{'>'}db_1{'\n'}
                   @enduml
                 </pre>
               </div>
@@ -83,3 +83,4 @@ const UMLHelp = () => {
 };
 
 export default UMLHelp;
+
