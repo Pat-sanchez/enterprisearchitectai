@@ -21,6 +21,7 @@ const PlantUMLViewer: React.FC<PlantUMLViewerProps> = ({ plantUMLCode }) => {
       
       try {
         setLoading(true);
+        setError(null);
         
         // Encode PlantUML for the URL
         // PlantText uses a simple format: https://www.planttext.com/api/plantuml/svg/[encoded-text]

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Element, generatePlantUMLCode } from '@/lib/diagramUtils';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,13 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({
       }
     }
   }, [command, externalPlantUMLCode]);
+
+  // Update when external PlantUML code changes
+  useEffect(() => {
+    if (externalPlantUMLCode) {
+      setPlantUMLCode(externalPlantUMLCode);
+    }
+  }, [externalPlantUMLCode]);
 
   const handleReset = () => {
     setElements([]);

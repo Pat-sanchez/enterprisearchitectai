@@ -170,79 +170,188 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
   };
 
   const generateDiagram = () => {
+    const systemName = answers.system_name || 'Main System';
+    
+    // Start PlantUML code
     let plantUMLCode = '@startuml\n\n';
     
-    // Add theme styling
+    // Add theme and styling
     plantUMLCode += '!theme plain\n';
     plantUMLCode += 'skinparam backgroundColor transparent\n';
     plantUMLCode += 'skinparam componentStyle rectangle\n\n';
     
-    // Create the main system
-    const systemName = answers.system_name || 'Main System';
-    plantUMLCode += `[${systemName}] as MainSystem\n`;
+    // Determine system style based on purpose
+    let systemShape = '';
+    switch (answers.purpose) {
+      case 'web_app':
+        systemShape = `rectangle "${systemName}" as MainSystem #LightBlue {\n`;
+        break;
+      case 'mobile_app':
+        systemShape = `node "${systemName}" as MainSystem #LightGreen {\n`;
+        break;
+      case 'api_service':
+        systemShape = `cloud "${systemName}" as MainSystem #LightYellow {\n`;
+        break;
+      case 'microservices':
+        systemShape = `package "${systemName}" as MainSystem #LightCyan {\n`;
+        break;
+      case 'ecommerce':
+        systemShape = `rectangle "${systemName}" as MainSystem #LightPink {\n`;
+        break;
+      case 'cms':
+        systemShape = `rectangle "${systemName}" as MainSystem #LightGrey {\n`;
+        break;
+      default:
+        systemShape = `rectangle "${systemName}" as MainSystem {\n`;
+    }
     
-    // Add components based on purpose and components
+    plantUMLCode += systemShape;
+    
+    // Add components
     if (answers.components) {
       const componentsList = answers.components.split(',').map(comp => comp.trim());
-      const componentIds: Record<string, string> = {};
       
       componentsList.forEach((component, index) => {
         const compId = `comp_${index + 1}`;
-        componentIds[component] = compId;
         
-        if (answers.purpose === 'microservices') {
-          plantUMLCode += `component "${component}" as ${compId}\n`;
-        } else if (answers.purpose === 'api_service') {
-          plantUMLCode += `interface "${component}" as ${compId}\n`;
+        if (component.toLowerCase().includes('service')) {
+          plantUMLCode += `  [${component}] as ${compId}\n`;
+        } else if (component.toLowerCase().includes('database') || 
+                 component.toLowerCase().includes('storage')) {
+          plantUMLCode += `  database "${component}" as ${compId}\n`;
+        } else if (component.toLowerCase().includes('api') || 
+                 component.toLowerCase().includes('gateway')) {
+          plantUMLCode += `  interface "${component}" as ${compId}\n`;
+        } else if (component.toLowerCase().includes('broker') || 
+                 component.toLowerCase().includes('queue')) {
+          plantUMLCode += `  queue "${component}" as ${compId}\n`;
         } else {
-          plantUMLCode += `[${component}] as ${compId}\n`;
-        }
-        
-        // Connect to the main system
-        if (index === 0) {
-          plantUMLCode += `MainSystem --> ${compId}\n`;
-        } else {
-          plantUMLCode += `${componentIds[componentsList[index-1]]} --> ${compId}\n`;
+          plantUMLCode += `  [${component}] as ${compId}\n`;
         }
       });
-    }
-    
-    // Add database
-    if (answers.data_storage) {
-      let dbName = `${answers.data_storage.toUpperCase()} Database`;
-      let dbId = 'db_1';
-      plantUMLCode += `database "${dbName}" as ${dbId}\n`;
       
-      // Connect last component to database
-      if (answers.components) {
-        const componentsList = answers.components.split(',').map(comp => comp.trim());
-        if (componentsList.length > 0) {
-          const lastCompId = `comp_${componentsList.length}`;
-          plantUMLCode += `${lastCompId} --> ${dbId}\n`;
-        } else {
-          plantUMLCode += `MainSystem --> ${dbId}\n`;
-        }
+      // Add component connections
+      for (let i = 0; i < componentsList.length - 1; i++) {
+        plantUMLCode += `  comp_${i + 1} --> comp_${i + 2}\n`;
       }
     }
     
-    // Add authentication service if specified
+    // Close the main system
+    plantUMLCode += '}\n\n';
+    
+    // Add database if specified
+    if (answers.data_storage) {
+      let dbName = '';
+      
+      switch (answers.data_storage) {
+        case 'mysql':
+          dbName = 'MySQL Database';
+          break;
+        case 'postgresql':
+          dbName = 'PostgreSQL Database';
+          break;
+        case 'mongodb':
+          dbName = 'MongoDB (NoSQL)';
+          break;
+        case 'firebase':
+          dbName = 'Firebase';
+          break;
+        case 'multi':
+          dbName = 'Multiple Databases';
+          break;
+        default:
+          dbName = 'Database';
+      }
+      
+      plantUMLCode += `database "${dbName}" as DB #Pink\n`;
+      plantUMLCode += 'MainSystem --> DB\n\n';
+    }
+    
+    // Add external services based on chosen authentication
     if (answers.auth_method) {
-      const authName = `${answers.auth_method.toUpperCase()} Auth Service`;
-      plantUMLCode += `[${authName}] as auth_1\n`;
-      plantUMLCode += `MainSystem --> auth_1\n`;
+      let authName = '';
+      
+      switch (answers.auth_method) {
+        case 'oauth':
+          authName = 'OAuth 2.0 Service';
+          break;
+        case 'jwt':
+          authName = 'JWT Auth Service';
+          break;
+        case 'basic':
+          authName = 'Basic Auth Service';
+          break;
+        case 'custom':
+          authName = 'Custom Auth Service';
+          break;
+        default:
+          authName = 'Auth Service';
+      }
+      
+      plantUMLCode += `cloud "${authName}" as Auth #LightYellow\n`;
+      plantUMLCode += 'MainSystem --> Auth\n\n';
+    }
+    
+    // Add communication protocols
+    if (answers.communication) {
+      let noteName = '';
+      
+      switch(answers.communication) {
+        case 'rest':
+          noteName = 'Communication: REST APIs';
+          break;
+        case 'graphql':
+          noteName = 'Communication: GraphQL';
+          break;
+        case 'grpc':
+          noteName = 'Communication: gRPC';
+          break;
+        case 'event':
+          noteName = 'Communication: Event-Driven';
+          break;
+        default:
+          noteName = 'Communication Protocol';
+      }
+      
+      plantUMLCode += `note right of MainSystem\n  ${noteName}\nend note\n\n`;
     }
     
     // Add deployment environment
     if (answers.deployment) {
-      const envName = `${answers.deployment.toUpperCase()} Environment`;
-      plantUMLCode += `node "${envName}" as env_1\n`;
-      plantUMLCode += `MainSystem --> env_1\n`;
+      let envName = '';
+      let envColor = '';
+      
+      switch (answers.deployment) {
+        case 'aws':
+          envName = 'AWS Cloud';
+          envColor = '#LightBlue';
+          break;
+        case 'azure':
+          envName = 'Azure Cloud';
+          envColor = '#LightCyan';
+          break;
+        case 'gcp':
+          envName = 'Google Cloud';
+          envColor = '#LightYellow';
+          break;
+        case 'onprem':
+          envName = 'On-Premises';
+          envColor = '#LightGrey';
+          break;
+        default:
+          envName = 'Deployment Environment';
+          envColor = '';
+      }
+      
+      plantUMLCode += `cloud "${envName}" as Env ${envColor}\n`;
+      plantUMLCode += 'MainSystem .... Env : deployed on\n\n';
     }
     
     // Close PlantUML
-    plantUMLCode += '\n@enduml';
+    plantUMLCode += '@enduml';
     
-    // Send PlantUML code to parent
+    // Send PlantUML code to parent component
+    console.log('Generated PlantUML code:', plantUMLCode);
     onCommandGenerated(plantUMLCode);
     
     toast.success("Generating architecture diagram based on your answers");
