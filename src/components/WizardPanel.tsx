@@ -13,7 +13,7 @@ interface Question {
   id: string;
   title: string;
   description: string;
-  type: 'radio' | 'text' | 'textarea' | 'hybrid-components';
+  type: 'radio' | 'text' | 'textarea' | 'hybrid-components' | 'relationships';
   options?: { value: string; label: string }[];
 }
 
@@ -27,6 +27,11 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [selectedComponents, setSelectedComponents] = useState<string[]>([]);
   const [customComponents, setCustomComponents] = useState<string>('');
+  const [componentRelationships, setComponentRelationships] = useState<Array<{
+    source: string;
+    target: string;
+    type: string;
+  }>>([]);
 
   const questions: Question[] = [
     {
@@ -114,6 +119,20 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
         { value: 'onprem', label: 'On-Premises' },
       ],
     },
+    {
+      id: 'component_relationships',
+      title: 'How do components communicate?',
+      description: 'Define how your components interact with each other',
+      type: 'relationships',
+      options: [
+        { value: 'rest', label: 'REST API' },
+        { value: 'grpc', label: 'gRPC' },
+        { value: 'graphql', label: 'GraphQL' },
+        { value: 'event', label: 'Event-driven' },
+        { value: 'tcp', label: 'TCP/IP' },
+        { value: 'websocket', label: 'WebSocket' },
+      ],
+    },
   ];
 
   const currentQuestion = questions[currentStep];
@@ -167,6 +186,14 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
       ...answers,
       [currentQuestion.id]: [...selectedComponents, value].filter(Boolean).join(', '),
     });
+  };
+
+  const handleComponentRelationship = (source: string, target: string, type: string) => {
+    setComponentRelationships(prev => [...prev, { source, target, type }]);
+    setAnswers(prev => ({
+      ...prev,
+      component_relationships: JSON.stringify(componentRelationships),
+    }));
   };
 
   const generateDiagram = () => {
@@ -230,19 +257,15 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
           processedComponents.add(component);
         }
       });
-      
-      const connectedComponents = new Set<string>();
-      
-      for (let i = 0; i < componentsList.length - 1; i++) {
-        const source = `comp_${i + 1}`;
-        const target = `comp_${i + 2}`;
-        const connectionKey = `${source}-${target}`;
+
+      componentRelationships.forEach(rel => {
+        const sourceIdx = componentsList.indexOf(rel.source);
+        const targetIdx = componentsList.indexOf(rel.target);
+        const sourceId = `comp_${sourceIdx + 1}`;
+        const targetId = `comp_${targetIdx + 1}`;
         
-        if (!connectedComponents.has(connectionKey)) {
-          plantUMLCode += `  ${source} --> ${target}\n`;
-          connectedComponents.add(connectionKey);
-        }
-      }
+        plantUMLCode += `  ${sourceId} --> ${targetId} : ${rel.type}\n`;
+      });
     }
     
     plantUMLCode += '}\n\n';
@@ -334,6 +357,37 @@ const WizardPanel: React.FC<WizardPanelProps> = ({ onCommandGenerated, hidden = 
 
   const renderQuestionInput = () => {
     switch (currentQuestion.type) {
+      case 'relationships':
+        const components = answers.components ? 
+          answers.components.split(',').map(c => c.trim()) : [];
+        
+        return (
+          <div className="space-y-6 mt-4">
+            {components.map((source, idx) => (
+              components.slice(idx + 1).map((target, targetIdx) => (
+                <div key={`${source}-${target}`} className="p-4 border rounded-lg space-y-3">
+                  <div className="font-medium">
+                    How does "{source}" communicate with "{target}"?
+                  </div>
+                  <RadioGroup 
+                    onValueChange={(value) => handleComponentRelationship(source, target, value)}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {currentQuestion.options?.map((option) => (
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option.value} id={`${source}-${target}-${option.value}`} />
+                        <Label htmlFor={`${source}-${target}-${option.value}`}>
+                          {option.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              ))
+            ))}
+          </div>
+        );
+
       case 'hybrid-components':
         return (
           <div className="space-y-4 mt-4">
