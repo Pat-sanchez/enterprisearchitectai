@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const Index = () => {
   const [currentCommand, setCurrentCommand] = useState<string | undefined>();
@@ -128,35 +129,44 @@ const Index = () => {
       />
       
       <div className="flex-1 container mx-auto p-6 overflow-hidden flex flex-col">
-        <div className="flex min-h-[500px] rounded-xl border gap-4 flex-1">
-          <Card className="w-[30%] min-w-[300px] rounded-none border-0">
-            <CardHeader>
-              <CardTitle>Onboarding</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[calc(100vh-400px)]">
-                <WizardPanel 
-                  onCommandGenerated={handleWizardComplete}
-                  hidden={showingDiagram}
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="min-h-[500px] rounded-xl border"
+        >
+          <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
+            <Card className="h-full rounded-none border-0">
+              <CardHeader>
+                <CardTitle>Onboarding</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[calc(100vh-400px)]">
+                  <WizardPanel 
+                    onCommandGenerated={handleWizardComplete}
+                    hidden={showingDiagram}
+                  />
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          <ResizablePanel defaultSize={70}>
+            <Card className="h-full rounded-none border-0">
+              <CardHeader>
+                <CardTitle>Whiteboard</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <DiagramCanvas 
+                  command={currentCommand} 
+                  svgRef={svgRef}
+                  onElementsChange={setElements}
+                  plantUMLCode={plantUMLCode}
                 />
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          <Card className="flex-1 rounded-none border-0">
-            <CardHeader>
-              <CardTitle>Whiteboard</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <DiagramCanvas 
-                command={currentCommand} 
-                svgRef={svgRef}
-                onElementsChange={setElements}
-                plantUMLCode={plantUMLCode}
-              />
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </ResizablePanel>
+        </ResizablePanelGroup>
 
         <Collapsible
           open={isDevPanelOpen}
