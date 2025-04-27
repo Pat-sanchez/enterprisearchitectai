@@ -17,6 +17,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
   const [currentCommand, setCurrentCommand] = useState<string | undefined>();
@@ -113,7 +114,7 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-background to-secondary/30">
       <Header 
-        activeTab={activeTab} 
+        activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as 'wizard' | 'import')}
         onNewDiagram={handleNewDiagram}
         onSaveDiagram={handleSaveDiagram}
@@ -128,60 +129,60 @@ const Index = () => {
       />
       
       <div className="flex-1 container mx-auto p-6 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl border border-border/50">
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full">
-              {activeTab === 'wizard' ? (
+        <ResizablePanelGroup direction="horizontal" className="min-h-[800px] rounded-xl border">
+          {/* Onboarding Section */}
+          <ResizablePanel defaultSize={30} minSize={25}>
+            <Card className="h-full rounded-none border-0">
+              <CardHeader>
+                <CardTitle>Onboarding</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
                 <WizardPanel 
                   onCommandGenerated={handleWizardComplete}
                   hidden={showingDiagram}
                 />
-              ) : (
-                <ImportPanel onCommandGenerated={handleUserMessage} />
-              )}
-            </div>
+              </CardContent>
+            </Card>
           </ResizablePanel>
           
           <ResizableHandle withHandle />
           
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full relative">
-              <DiagramCanvas 
-                command={currentCommand} 
-                svgRef={svgRef}
-                onElementsChange={setElements}
-                plantUMLCode={plantUMLCode}
-              />
-              
-              {elements.length > 0 && (
-                <Drawer open={showSearch} onOpenChange={setShowSearch}>
-                  <DrawerTrigger asChild>
-                    <Button
-                      size="icon"
-                      className="absolute top-4 right-4 z-10"
-                      onClick={() => setShowSearch(true)}
-                    >
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </DrawerTrigger>
-                  <DrawerContent>
-                    <div className="container max-w-sm mx-auto p-4">
-                      <h3 className="font-semibold mb-4 text-center">Search Elements</h3>
-                      <DiagramSearchPanel 
-                        elements={elements} 
-                        onElementClick={handleFocusElement}
-                      />
-                    </div>
-                  </DrawerContent>
-                </Drawer>
-              )}
-            </div>
+          {/* Developer Mode Section */}
+          <ResizablePanel defaultSize={35} minSize={25}>
+            <Card className="h-full rounded-none border-0">
+              <CardHeader>
+                <CardTitle>Developer Mode</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <DeveloperPanel 
+                  onCommandGenerated={handleUserMessage} 
+                  plantUMLCode={plantUMLCode}
+                />
+              </CardContent>
+            </Card>
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          {/* Whiteboard Section */}
+          <ResizablePanel defaultSize={35} minSize={25}>
+            <Card className="h-full rounded-none border-0">
+              <CardHeader>
+                <CardTitle>Whiteboard</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <DiagramCanvas 
+                  command={currentCommand} 
+                  svgRef={svgRef}
+                  onElementsChange={setElements}
+                  plantUMLCode={plantUMLCode}
+                />
+              </CardContent>
+            </Card>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-      
-      <DeveloperPanel onCommandGenerated={handleUserMessage} plantUMLCode={plantUMLCode} />
-      
+
       <footer className="border-t py-3 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>Create enterprise architecture diagrams through guided wizards or imports</p>
