@@ -7,7 +7,8 @@ import TemplatesDialog from '@/components/TemplatesDialog';
 import VersionHistoryDialog from '@/components/VersionHistoryDialog';
 import KeyboardShortcutsDialog from '@/components/KeyboardShortcutsDialog';
 import HelpDocumentationDialog from '@/components/HelpDocumentationDialog';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
 import { exportAsSVG, exportAsPNG, exportAsJSON } from '@/lib/exportUtils';
 import { Element } from '@/lib/diagramUtils';
 import { useHotkeys } from '@/hooks/useHotkeys';
@@ -107,105 +108,105 @@ const Index = () => {
   ]);
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-background to-secondary/30">
-      <Header 
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as 'wizard' | 'import')}
-        onNewDiagram={handleNewDiagram}
-        onSaveDiagram={handleSaveDiagram}
-        onResetDiagram={handleResetDiagram}
-        onBackToWizard={handleBackToWizard}
-        showWizardControls={showingDiagram}
-        onExportDiagram={handleExportDiagram}
-        onShowTemplates={() => setShowTemplatesDialog(true)}
-        onShowHistory={() => setShowVersionHistory(true)}
-        onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
-        onShowHelp={() => setShowHelpDocs(true)}
-      />
-      
-      <div className="flex-1 container mx-auto p-6 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="min-h-[800px] rounded-xl border">
-          {/* Onboarding Section */}
-          <ResizablePanel defaultSize={30} minSize={25}>
-            <Card className="h-full rounded-none border-0">
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex flex-col h-screen w-full bg-gradient-to-br from-background to-secondary/30">
+        <Header 
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as 'wizard' | 'import')}
+          onNewDiagram={handleNewDiagram}
+          onSaveDiagram={handleSaveDiagram}
+          onResetDiagram={handleResetDiagram}
+          onBackToWizard={handleBackToWizard}
+          showWizardControls={showingDiagram}
+          onExportDiagram={handleExportDiagram}
+          onShowTemplates={() => setShowTemplatesDialog(true)}
+          onShowHistory={() => setShowVersionHistory(true)}
+          onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
+          onShowHelp={() => setShowHelpDocs(true)}
+        />
+        
+        <div className="flex-1 container mx-auto p-6 overflow-hidden">
+          <div className="flex min-h-[800px] rounded-xl border gap-4">
+            <Card className="w-[30%] min-w-[300px] rounded-none border-0">
               <CardHeader>
                 <CardTitle>Onboarding</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <WizardPanel 
-                  onCommandGenerated={handleWizardComplete}
-                  hidden={showingDiagram}
-                />
+                <ScrollArea className="h-[calc(100vh-250px)]">
+                  <WizardPanel 
+                    onCommandGenerated={handleWizardComplete}
+                    hidden={showingDiagram}
+                  />
+                </ScrollArea>
               </CardContent>
             </Card>
-          </ResizablePanel>
-          
-          <ResizableHandle withHandle />
-          
-          {/* Developer Mode Section */}
-          <ResizablePanel defaultSize={35} minSize={25}>
-            <Card className="h-full rounded-none border-0">
-              <CardHeader>
-                <CardTitle>Developer Mode</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <DeveloperPanel 
-                  onCommandGenerated={handleUserMessage} 
-                  plantUMLCode={plantUMLCode}
-                />
-              </CardContent>
-            </Card>
-          </ResizablePanel>
-          
-          <ResizableHandle withHandle />
-          
-          {/* Whiteboard Section */}
-          <ResizablePanel defaultSize={35} minSize={25}>
-            <Card className="h-full rounded-none border-0">
-              <CardHeader>
-                <CardTitle>Whiteboard</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <DiagramCanvas 
-                  command={currentCommand} 
-                  svgRef={svgRef}
-                  onElementsChange={setElements}
-                  plantUMLCode={plantUMLCode}
-                />
-              </CardContent>
-            </Card>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
 
-      <footer className="border-t py-3 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Create enterprise architecture diagrams through guided wizards or imports</p>
+            <div className="flex-1 flex">
+              <Card className="flex-1 rounded-none border-0">
+                <CardHeader>
+                  <CardTitle>Whiteboard</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <DiagramCanvas 
+                    command={currentCommand} 
+                    svgRef={svgRef}
+                    onElementsChange={setElements}
+                    plantUMLCode={plantUMLCode}
+                  />
+                </CardContent>
+              </Card>
+
+              <Sidebar side="right" className="border-l">
+                <SidebarContent>
+                  <Card className="h-full rounded-none border-0">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle>Developer Mode</CardTitle>
+                      <SidebarTrigger />
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <ScrollArea className="h-[calc(100vh-250px)]">
+                        <DeveloperPanel 
+                          onCommandGenerated={handleUserMessage} 
+                          plantUMLCode={plantUMLCode}
+                        />
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                </SidebarContent>
+              </Sidebar>
+            </div>
+          </div>
         </div>
-      </footer>
+
+        <footer className="border-t py-3 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+          <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+            <p>Create enterprise architecture diagrams through guided wizards or imports</p>
+          </div>
+        </footer>
       
-      <TemplatesDialog
-        open={showTemplatesDialog}
-        onClose={() => setShowTemplatesDialog(false)}
-        onSelectTemplate={handleUserMessage}
-      />
+        <TemplatesDialog
+          open={showTemplatesDialog}
+          onClose={() => setShowTemplatesDialog(false)}
+          onSelectTemplate={handleUserMessage}
+        />
       
-      <VersionHistoryDialog
-        open={showVersionHistory}
-        onClose={() => setShowVersionHistory(false)}
-        onRestoreVersion={handleRestoreVersion}
-      />
+        <VersionHistoryDialog
+          open={showVersionHistory}
+          onClose={() => setShowVersionHistory(false)}
+          onRestoreVersion={handleRestoreVersion}
+        />
       
-      <KeyboardShortcutsDialog
-        open={showKeyboardShortcuts}
-        onClose={() => setShowKeyboardShortcuts(false)}
-      />
+        <KeyboardShortcutsDialog
+          open={showKeyboardShortcuts}
+          onClose={() => setShowKeyboardShortcuts(false)}
+        />
       
-      <HelpDocumentationDialog
-        open={showHelpDocs}
-        onClose={() => setShowHelpDocs(false)}
-      />
-    </div>
+        <HelpDocumentationDialog
+          open={showHelpDocs}
+          onClose={() => setShowHelpDocs(false)}
+        />
+      </div>
+    </SidebarProvider>
   );
 };
 
